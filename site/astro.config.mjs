@@ -4,8 +4,8 @@ import starlight from '@astrojs/starlight';
 import { publication, sections } from '../scripts/lib/manuscript.mjs';
 
 // Google Analytics（GA4）。测量 ID 从环境变量 PUBLIC_GA_MEASUREMENT_ID 读取（Cloudflare 构建时在
-// Worker → Settings → Variables and Secrets 里配置，本地可写在 site/.env），未设置则不注入统计脚本。
-const gaId = process.env.PUBLIC_GA_MEASUREMENT_ID ?? '';
+// Worker → Settings → Variables and Secrets 里配置，本地可写在 site/.env），未设置时用默认的 G-G6XTK77696。
+const gaId = process.env.PUBLIC_GA_MEASUREMENT_ID ?? 'G-G6XTK77696';
 const gaHead = gaId
 	? [
 			{

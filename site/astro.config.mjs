@@ -19,6 +19,36 @@ const gaHead = gaId
 		]
 	: [];
 
+// Google Search Console 的 HTML 标记验证：设置环境变量 PUBLIC_GOOGLE_SITE_VERIFICATION 即注入（也可改用 DNS 验证，见 README）
+const googleVerification = process.env.PUBLIC_GOOGLE_SITE_VERIFICATION ?? '';
+const seoHead = [
+	{ tag: 'meta', attrs: { property: 'og:image:width', content: '1600' } },
+	{ tag: 'meta', attrs: { property: 'og:image:height', content: '2400' } },
+	{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+	{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://agent-harness.codeflow.cc/cover.png' } },
+	{ tag: 'meta', attrs: { name: 'keywords', content: 'Agent Harness, coding agent, AI agent, agent loop, KV cache, system prompt, context engineering, MCP, Claude Code, opencode, codex' } },
+	{
+		tag: 'script',
+		attrs: { type: 'application/ld+json' },
+		content: JSON.stringify({
+			'@context': 'https://schema.org',
+			'@type': 'Book',
+			name: publication.fullTitle,
+			alternateName: publication.title,
+			author: { '@type': 'Person', name: publication.author, email: publication.email },
+			inLanguage: 'zh-CN',
+			bookFormat: 'https://schema.org/EBook',
+			datePublished: publication.publicationDate,
+			dateModified: publication.revisionDate,
+			version: publication.revision,
+			image: 'https://agent-harness.codeflow.cc/cover.png',
+			url: 'https://agent-harness.codeflow.cc/',
+			description: '同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。',
+		}),
+	},
+	...(googleVerification ? [{ tag: 'meta', attrs: { name: 'google-site-verification', content: googleVerification } }] : []),
+];
+
 // 侧栏结构与电子书书签树一致：序 → 六个部分（部扉页 + 各章）→ 后记
 // 侧栏结构与电子书书签树一致：序 → 六个部分（导读 + 各章）→ 后记。
 // 侧栏用短标签：部分作为分组名，部扉页显示为「导读」，章只保留章号与标题；其他部分默认折叠。
@@ -69,6 +99,7 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://agent-harness.codeflow.cc/cover.png' } },
 				{ tag: 'meta', attrs: { property: 'og:image:alt', content: `${publication.fullTitle}封面` } },
 				{ tag: 'meta', attrs: { name: 'author', content: publication.author } },
+				...seoHead,
 				...gaHead,
 			],
 		}),

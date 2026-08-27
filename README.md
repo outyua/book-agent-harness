@@ -51,6 +51,8 @@ pnpm --dir site dev                            # 本地预览 http://localhost:4
 
 **统计：** 网站用 Google Analytics（GA4，通过 Starlight 的 `head` 注入 gtag）。在 Worker 的 Settings → Variables and Secrets 里可用构建变量 `PUBLIC_GA_MEASUREMENT_ID` 覆盖测量 ID；默认为 `G-G6XTK77696`。Worker 的可观测性（traces 开、logs 关）配置在 `wrangler.jsonc` 的 `observability` 里。
 
+**SEO 与站长工具：** 站点自动生成 `sitemap-index.xml`（Astro sitemap，`site` 已设为 agent-harness.codeflow.cc），`public/robots.txt` 指向它；每页有 `<title>`、description、canonical、Open Graph / Twitter 卡片、`lang="zh-CN"`，全站注入 schema.org `Book` 结构化数据。提交 Google Search Console：添加资源「网址前缀 https://agent-harness.codeflow.cc」，验证方式二选一——① HTML 标记：把给出的 `content` 值设为 Worker 构建变量 `PUBLIC_GOOGLE_SITE_VERIFICATION` 后重新部署；② DNS：在 Cloudflare 的 codeflow.cc 区域加 TXT 记录。验证后在「站点地图」里提交 `https://agent-harness.codeflow.cc/sitemap-index.xml`。
+
 **电子书：GitHub Action → GitHub Release。** `.github/workflows/ebook.yml` 在书稿、图、素材或构建脚本变动时运行，用 Chromium 生成 PDF/EPUB，发布到 Release `latest`。网站首页的下载按钮在 Cloudflare 构建环境里没有本地成品时，自动指向 `https://github.com/outyua/book-agent-harness/releases/latest/download/…`。仓库为私有时这些链接需要登录 GitHub 才能下载；公开仓库可直接访问。
 
 ## 写作与校验

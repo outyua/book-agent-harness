@@ -89,8 +89,9 @@ function firstParagraph(markdown) {
   for (const line of lines) {
     const text = line.trim();
     if (!text || text.startsWith("#") || text.startsWith(">") || text.startsWith("|") || text.startsWith("!") || text.startsWith("---") || text.startsWith("```")) continue;
-    const plain = text.replace(/[*`_\[\]]/g, "").replace(/\(https?:[^)]*\)/g, "");
-    return plain.length > 140 ? `${plain.slice(0, 140)}…` : plain;
+    const plain = text.replace(/<[^>]+>/g, "").replace(/[*`_\[\]]/g, "").replace(/\(https?:[^)]*\)/g, "");
+    if (plain.length < 40) continue; // 跳过一句话的引子，取第一段有信息量的正文
+    return plain.length > 150 ? `${plain.slice(0, 150)}…` : plain;
   }
   return publication.subtitle;
 }

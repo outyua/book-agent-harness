@@ -265,6 +265,15 @@
 	white-space: nowrap;
 }
 
+.sl-markdown-content table {
+	overflow-wrap: normal;
+}
+
+.sl-markdown-content tbody td:first-child {
+	white-space: nowrap;
+	font-weight: 500;
+}
+
 /* ---------- 插图 ---------- */
 
 .sl-markdown-content .book-figure {
@@ -329,8 +338,21 @@
 	font-family: var(--sl-font-heading);
 }
 
+.sidebar-content {
+	font-size: 0.9rem;
+}
+
 .sidebar-content details > summary {
 	font-weight: 600;
+}
+
+.sidebar-content details > summary .large {
+	font-size: 0.95rem;
+}
+
+.sidebar-content details a {
+	font-size: 0.88rem;
+	line-height: 1.5;
 }
 
 .right-sidebar-panel h2 {
@@ -369,9 +391,18 @@
 	line-height: 1.8;
 }
 
+.hero .hero-author {
+	display: block;
+	margin-top: 1rem;
+	font-family: var(--sl-font-heading);
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--sl-color-white);
+}
+
 .hero .hero-meta {
-	display: inline-block;
-	margin-top: 0.6rem;
+	display: block;
+	margin-top: 0.2rem;
 	font-family: var(--sl-font-heading);
 	font-size: 0.9rem;
 	color: var(--sl-color-gray-3);
@@ -394,9 +425,10 @@
 	gap: 2.5rem;
 	align-items: start;
 	max-width: var(--book-measure);
-	margin: 3.5rem auto 0;
-	padding-top: 2rem;
+	margin: 2.5rem auto 0;
+	padding: 1.75rem 0;
 	border-top: 1px solid var(--sl-color-hairline);
+	border-bottom: 1px solid var(--sl-color-hairline);
 }
 
 .home-author h2 {

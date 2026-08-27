@@ -208,20 +208,12 @@ description: ${yamlString("同一个工程问题，23 个真实 coding agent 分
 template: splash
 hero:
   title: ${yamlString(publication.title)}
-  tagline: ${yamlString(`${publication.subtitle}<br />同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。<br /><span class="hero-meta">作者 ${publication.author} · ${publication.edition} ${publication.publicationDate} · 修订版 ${publication.revision} ${publication.revisionDate}</span>`)}
+  tagline: ${yamlString(`${publication.subtitle}<br />同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。<br /><span class="hero-author">作者 ${publication.author}</span><span class="hero-meta">公众号 ${publication.account} · ${publication.email} · 修订版 ${publication.revision}（${publication.revisionDate}）</span>`)}
   image:
     html: ${yamlString(`<img class="book-cover" src="/cover.png" width="600" height="900" alt="${publication.fullTitle}封面" loading="eager" decoding="async" />`)}
   actions:
 ${actionsYaml}
 ---
-
-<section class="home-intro">
-
-这本书回答四件事：面对同一个决策点，各家 coding agent 分别怎么做；它们为什么会做出不同甚至相反的选择；判断该抄哪一个的标准是什么；以及照着做时最小的可用实现长什么样。17 章按 agent 生命周期上的决策点组织——循环、工具、插话、恢复、KV cache、system prompt、压缩、记忆、检索、权限、多 agent、协议、会话运行时、云端、交付流水线、评测。
-
-每一条结论都对照真实项目的源码，给出文件与行号；闭源产品只依据公开材料，并标明证据级别。项目源码材料截止到 ${publication.sourceCutoffDate}；这些项目每天都在改，把书当作设计决策的比较框架，不要把任何具体版本号或常量当作永久事实。
-
-</section>
 
 <section class="home-author">
   <div class="home-author-copy">
@@ -234,6 +226,14 @@ ${actionsYaml}
     <img src="/wechat-qr.png" width="200" height="200" alt="公众号 ${publication.account} 二维码" loading="lazy" decoding="async" />
     <figcaption>微信扫码关注公众号 ${publication.account}</figcaption>
   </figure>
+</section>
+
+<section class="home-intro">
+
+这本书回答四件事：面对同一个决策点，各家 coding agent 分别怎么做；它们为什么会做出不同甚至相反的选择；判断该抄哪一个的标准是什么；以及照着做时最小的可用实现长什么样。17 章按 agent 生命周期上的决策点组织——循环、工具、插话、恢复、KV cache、system prompt、压缩、记忆、检索、权限、多 agent、协议、会话运行时、云端、交付流水线、评测。
+
+每一条结论都对照真实项目的源码，给出文件与行号；闭源产品只依据公开材料，并标明证据级别。项目源码材料截止到 ${publication.sourceCutoffDate}；这些项目每天都在改，把书当作设计决策的比较框架，不要把任何具体版本号或常量当作永久事实。
+
 </section>
 
 <nav class="home-toc" aria-label="目录">

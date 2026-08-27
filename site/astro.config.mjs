@@ -20,19 +20,27 @@ const gaHead = gaId
 	: [];
 
 // 侧栏结构与电子书书签树一致：序 → 六个部分（部扉页 + 各章）→ 后记
+// 侧栏结构与电子书书签树一致：序 → 六个部分（导读 + 各章）→ 后记。
+// 侧栏用短标签：部分作为分组名，部扉页显示为「导读」，章只保留章号与标题；其他部分默认折叠。
+function sidebarLabel(section) {
+	if (section.type === 'part') return '导读';
+	const m = section.label.match(/^第 (\d+) 章 · (.+)$/);
+	return m ? `${m[1]} · ${m[2]}` : section.label;
+}
+
 function buildSidebar() {
 	const groups = [];
 	let current = null;
 	for (const section of sections) {
-		const item = { label: section.label, slug: `book/${section.id}` };
+		const item = { label: sidebarLabel(section), slug: `book/${section.id}` };
 		if (section.type === 'part') {
-			current = { label: section.label, items: [item] };
+			current = { label: section.label, collapsed: true, items: [item] };
 			groups.push(current);
 		} else if (section.type === 'chapter' && current) {
 			current.items.push(item);
 		} else {
 			current = null;
-			groups.push(item);
+			groups.push({ label: section.label, slug: `book/${section.id}` });
 		}
 	}
 	return groups;

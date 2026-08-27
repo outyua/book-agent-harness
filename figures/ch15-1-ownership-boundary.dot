@@ -1,0 +1,43 @@
+// 图 15-1 云端部署中的所有权边界：谁运行循环、谁保存密钥
+// 生成: dot -Tsvg ch15-1-ownership-boundary.dot -o ch15-1-ownership-boundary.svg
+digraph ownership {
+  rankdir=TB;
+  ranksep=0.60;
+  nodesep=0.26;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  subgraph cluster_ctl {
+    label="控制面 · 长期可信 · 持有全部长期凭证";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    c1 [label="调度与 Placement 状态机\l耐久，重启后 reconcile\l", fillcolor="#f2f2f2"];
+    c2 [label="Transcript 会话库\l与计算单元解耦\l容器可销毁\l", fillcolor="#f2f2f2"];
+    c3 [label="LLM Gateway\l凭证不出网关\l统一计费 / 审计 / 吊销\l", fillcolor="#eeeeee"];
+    c4 [label="MCP OAuth Gateway\l代理握手\l换短期票据\l", fillcolor="#eeeeee"];
+  }
+
+  subgraph cluster_pod {
+    label="Session Pod / microVM · 一次性、不可信 · 只持短期票据";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    p1 [label="agent runtime\l循环 + 工具编排\l", fillcolor="#e6e6e6"];
+    p2 [label="tool sidecar\l高危操作单独进程\l便于审计与 kill\l", fillcolor="#e6e6e6"];
+    p3 [label="extension runtime\lmcp sidecars\l", fillcolor="#e6e6e6"];
+    p4 [label="workspace 卷\l/workspace · /tmp · /state\l", fillcolor="#e0e0e0"];
+  }
+
+  // 全部声明为 控制面 → Pod 以固定上下位置；逻辑上向上的流用 dir=back
+  c1 -> p1 [label="  下发任务与工具目录\l  （每回合投影）\l"];
+  c2 -> p1 [label="  durable 事件  ", dir=back];
+  c3 -> p1 [label="  模型调用（无 key）  ", dir=back];
+  c4 -> p3 [label="  换短期票据  ", dir=back];
+  // p2（tool sidecar）与 p4（workspace 卷）不直连控制面——这本身就是所有权边界的一部分
+
+  note [label="信任边界：Pod 内跑的是模型生成的代码——长期凭证一旦进来，就等于交给攻击者（第 11 章 §11.1.2）。\lWorker 协议是闭集：Pod 不能调用管理面 RPC。\l更彻底的做法（codex exec-server）：registry 只做注册与授权，流量经服务方的 rendezvous 中转，\l中转方只按 stream_id 路由、看不到明文。已知限制：registry 同时下发公钥并裁定授权，\l被攻破可以给攻击者的公钥放行；它拿不到的只是既往流量的明文。代价是可观测性下降。\l",
+        shape=note, fillcolor="white", fontsize=10];
+  p1 -> note [style=invis];
+  p2 -> note [style=invis];
+  p3 -> note [style=invis];
+  p4 -> note [style=invis];
+}

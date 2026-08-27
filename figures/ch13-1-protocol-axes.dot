@@ -1,0 +1,29 @@
+// 图 13-1 三种协议分别连接哪些参与方
+// 生成: dot -Tsvg ch13-1-protocol-axes.dot -o ch13-1-protocol-axes.svg
+digraph axes {
+  rankdir=TB;
+  ranksep=0.42;
+  nodesep=0.40;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  ui [label="前端 / 人", shape=box, style="filled,rounded", fillcolor="#e0e0e0", width=2.4];
+
+  agent [label="你的 Agent", shape=box, style="filled,rounded", fillcolor="#d9d9d9", width=2.4];
+
+  peer [label="远端 Agent\l（无法查看内部状态与工具）\l", shape=box, style="filled,rounded", fillcolor="#e0e0e0", width=2.4];
+
+  tool [label="工具 / 数据源", shape=box, style="filled,rounded", fillcolor="#e0e0e0", width=2.4];
+
+  ui -> agent [dir=back, label="  AG-UI · Agent 与前端之间\l  事件流：RUN_* / TEXT_MESSAGE_*\l  TOOL_CALL_* / STATE_*\l  STATE_SNAPSHOT + STATE_DELTA (JSON Patch)\l"];
+
+  agent -> peer [label="  A2A · 两个独立 Agent 之间\l  不共享内存、状态或工具\l  Task 是独立资源 · 通过 Agent Card 发现 agent\l  Linux Foundation 治理\l"];
+
+  agent -> tool [label="  MCP · Agent 与工具或数据源之间\l  1 client ↔ 1 server 严格配对\l  server 之间互不可见\l  无 agent 身份 · 无能力协商 · 无 peer 寻址\l"];
+
+  note [label="三个协议分别解决不同参与方之间的通信问题，完整系统可能同时使用三种协议。\l设计 agent 之间的通信时，需要区分：两个独立 agent 对等通信，还是主 agent 把子任务委托给 subagent？\lOpenAI Agents SDK / Microsoft Connected Agents / AWS Strands / LangChain/LangGraph\l都把 subagent 作为工具供主 agent 调用（本书普查，范围是这四家的官方文档，核 2026-08-17）；\lA2A 连接彼此独立的 agent。\l",
+        shape=note, fillcolor="white", fontsize=10];
+  tool -> note [style=invis];
+}

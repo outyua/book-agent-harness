@@ -1,0 +1,24 @@
+// 图 1-1 七层执行框架与本书章节的对应
+// 生成: dot -Tsvg ch01-1-book-map.dot -o ch01-1-book-map.svg
+digraph book_map {
+  rankdir=TB;
+  ranksep=0.30;
+  nodesep=0.25;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=11, shape=box, style="filled", fillcolor="white", color="#333333", width=5.4, height=0.52];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+  edge [style=invis];
+
+  g [label="⑦ 治理与安全  Governance\l          第 11 章 权限 · 沙箱 · 不可信输入 ｜ 第 15 章 多租户\l", fillcolor="#e0e0e0"];
+  v [label="⑥ 验证与评估  Verification\l          第 17 章 评测与 harness 自动改进\l", fillcolor="#e8e8e8"];
+  o [label="⑤ 可观测与运营  Observability\l          第 6 章 §6.5.3 · 第 14 章 · 第 17 章（本书不单列，见 §1.2.1）\l", fillcolor="#f0f0f0"];
+  l [label="④ 生命周期与编排  Lifecycle\l          第 2–5 章 循环 ｜ 第 12 章 要不要拆 ｜ 第 14–16 章 规模化\l", fillcolor="#f6f6f6"];
+  c [label="③ 上下文与记忆  Context\l          第 6–10 章 缓存 · 提示词 · 压缩 · 记忆 · 检索\l", fillcolor="#f0f0f0"];
+  t [label="② 工具接口与协议  Tool Interface\l          第 3 章 工具 ｜ 第 13 章 协议\l", fillcolor="#e8e8e8"];
+  e [label="① 执行环境  Execution Environment\l          第 11 章 沙箱 ｜ 第 15 章 会话载体\l", fillcolor="#e0e0e0"];
+
+  g -> v -> o -> l -> c -> t -> e;
+
+  model [label="模型（本书唯一不讨论的部分）", shape=box, style="filled,rounded", fillcolor="white", width=5.4];
+  e -> model;
+}

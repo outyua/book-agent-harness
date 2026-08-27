@@ -1,0 +1,35 @@
+// 图 11-1 攻击成立所需的四个步骤与三类防护措施
+// 生成: dot -Tsvg ch11-1-three-defenses.dot -o ch11-1-three-defenses.svg
+digraph defenses {
+  rankdir=TB;
+  ranksep=0.36;
+  nodesep=0.30;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  subgraph cluster_chain {
+    label="攻击成立所需的四个步骤：缺少任一步都无法完成";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+
+    a1 [label="① 注入\l攻击者文本进入模型上下文\lissue 正文 · 网页 · 依赖 README · 工具返回值 · 记忆\l", fillcolor="#f4f4f4"];
+    a2 [label="② 采信\l模型把内容当成指令而非数据\l", fillcolor="#f0f0f0"];
+    a3 [label="③ 取数\l访问私有数据（代码 · 凭证 · 环境）\l", fillcolor="#ececec"];
+    a4 [label="④ 外传\l把数据送出去（网络 · 提交 · 评论）\l", fillcolor="#e8e8e8"];
+
+    a1 -> a2 -> a3 -> a4;
+  }
+
+  d1 [label="防护一 · 标记不可信文本并降低其优先级\l放入 <untrusted_external_content> 标签并做实体转义\l声明优先级与冲突动作\l", shape=box, style="filled,rounded", fillcolor="white"];
+  d2 [label="防护二 · 权限检查\l默认 ask（fail-closed）· 先按 AST 拆成每条命令再逐条送审\l后定义规则覆盖先定义\l", shape=box, style="filled,rounded", fillcolor="white"];
+  d3 [label="防护三 · 执行环境隔离\l deny default 沙箱 · 网络单独授权\l模型说什么都改变不了内核的限制\l", shape=box, style="filled,rounded", fillcolor="white"];
+
+  a2 -> d1 [dir=back, style=dashed, label="削弱（概率性）"];
+  a3 -> d2 [dir=back, style=dashed, label="拦截（确定性）"];
+  a4 -> d3 [dir=back, style=dashed, label="切断（确定性）"];
+
+  note [label="防护一只能降低模型采信恶意指令的概率；防护二、三可以确定性地限制操作。\l最有效的单项措施是禁止第 ④ 步所需的外部通信。\l",
+        shape=note, fillcolor="white", fontsize=10];
+  d3 -> note [style=invis];
+}

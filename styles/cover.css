@@ -1,0 +1,179 @@
+@font-face {
+  font-family: "Book Sans SC";
+  src: url("../fonts/NotoSansSC-Book.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: block;
+}
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 1600px;
+  height: 2400px;
+  margin: 0;
+  overflow: hidden;
+  background: #f7f4ec;
+}
+
+body {
+  font-family: "Book Sans SC", "Noto Sans CJK SC", sans-serif;
+}
+
+.cover {
+  position: relative;
+  width: 1600px;
+  height: 2400px;
+  overflow: hidden;
+  background: #f7f4ec;
+  color: #191918;
+}
+
+.title-band {
+  position: relative;
+  z-index: 2;
+  height: 558px;
+  padding: 110px 120px 70px;
+  background: #843b34;
+  border-top: 3px solid #9a4a42;
+  border-bottom: 3px solid #6a2d27;
+  color: #fffdf8;
+}
+
+.title-band::after {
+  content: "";
+  position: absolute;
+  left: 120px;
+  bottom: -17px;
+  width: 200px;
+  height: 14px;
+  background: #843b34;
+  border-left: 1.5px solid #6a2d27;
+  border-right: 1.5px solid #6a2d27;
+  border-bottom: 1.5px solid #6a2d27;
+}
+
+.title {
+  max-width: 1320px;
+  margin: 0;
+  font-size: 120px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.title span {
+  display: block;
+}
+
+.title .cn {
+  margin-top: 10px;
+  font-size: 116px;
+  letter-spacing: 0.05em;
+}
+
+.subtitle {
+  margin: 34px 0 0;
+  color: #efe8dc;
+  font-size: 42px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+}
+
+.animal-field {
+  position: relative;
+  height: 1670px;
+  background: #f7f4ec;
+}
+
+.plate-frame {
+  position: absolute;
+  inset: 36px 90px;
+  border: 1.8px solid #d6cfbe;
+  pointer-events: none;
+}
+
+.plate-frame-inner {
+  position: absolute;
+  inset: 44px 98px;
+  border: 0.8px solid #e8e2d4;
+  pointer-events: none;
+}
+
+.animal {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  width: 1040px;
+  height: 1215px;
+  object-fit: contain;
+  filter: contrast(1.06);
+  transform: translateX(-50%);
+}
+
+.animal-caption {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: #8e887b;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+
+.animal-caption::before,
+.animal-caption::after {
+  content: "";
+  display: inline-block;
+  width: 80px;
+  height: 1px;
+  background: #cdc6b5;
+}
+
+.animal-caption em {
+  font-style: italic;
+  font-size: 19px;
+  letter-spacing: 0.12em;
+}
+
+.author-band {
+  display: flex;
+  height: 172px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 120px;
+  background: #181817;
+  border-top: 2px solid #2e2d2a;
+  color: #fffdf8;
+}
+
+.author {
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.author .tag {
+  font-size: 34px;
+  font-weight: 400;
+  color: #cbc5b8;
+}
+
+.edition {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: #cbc5b8;
+}

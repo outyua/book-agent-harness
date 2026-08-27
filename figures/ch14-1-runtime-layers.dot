@@ -1,0 +1,39 @@
+// 图 14-1 会话运行时：真相源、投影与双轨事件
+// 生成: dot -Tsvg ch14-1-runtime-layers.dot -o ch14-1-runtime-layers.svg
+digraph runtime {
+  rankdir=TB;
+  ranksep=0.34;
+  nodesep=0.30;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  loop [label="Agent Loop（第 2 章）\l只认 9 个回调，不知道下面这些存在\l", shape=box, style="filled,rounded", fillcolor="#e0e0e0", width=5.2];
+
+  subgraph cluster_truth {
+    label="真相源 · 只追加，永不改写";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    e1 [label="Entry 树（对话数据）\l分支＝移动 leaf 指针；压缩＝插入自包含边界条目\l", fillcolor="#f4f4f4", width=5.0];
+    e2 [label="Record 日志 · WAL（运行数据）\lturn 开始 · step 尝试 · 工具启动（带 replay 声明）\l队列进出 · 延迟写 · 用量\l", fillcolor="#f0f0f0", width=5.0];
+    e1 -> e2 [style=invis];
+  }
+
+  proj [label="投影 · 读模型（与事件写入同事务）\l会话列表只读三态 idle | running | requires_action，不解析事件流\l", fillcolor="#e8e8e8", width=5.2];
+
+  subgraph cluster_out {
+    label="出口 · 双轨";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    d1 [label="durable 事件（落库可重放，每会话单调 seq）\l消息定稿 · 工具调用与结果 · 审批 · 压缩边界 · run 迁移\l", fillcolor="#f0f0f0", width=5.0];
+    d2 [label="live 事件（只推不存）\ltext/thinking delta · 工具输出增量 · typing · 用量\l", fillcolor="#f6f6f6", width=5.0];
+    d1 -> d2 [style=invis];
+  }
+
+  rec [label="恢复：从持久化的运行记录读出未完成的转移\l折叠日志与寄存器点查两种写法，见 §14.2.3\l读不出合法状态判损坏，不自动修\l", shape=box, style="filled,rounded", fillcolor="#dedede", width=5.2];
+
+  loop -> e1 [label="副作用前先写 intent（含预分配的全部 id）"];
+  e2 -> proj [label="同事务投影"];
+  proj -> d1;
+  e2 -> rec [label="崩溃后", style=dashed];
+  rec -> loop [label="重入常规流程的第一个未完成转移", style=dashed];
+}

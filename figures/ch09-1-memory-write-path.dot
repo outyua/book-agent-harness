@@ -1,0 +1,41 @@
+// 图 9-1 记忆写路径的三个阶段与提交权的归属
+// 生成: dot -Tsvg ch09-1-memory-write-path.dot -o ch09-1-memory-write-path.svg
+digraph memwrite {
+  rankdir=TB;
+  ranksep=0.34;
+  nodesep=0.28;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  subgraph cluster_hot {
+    label="① 在线请求处理（会话进行中）· 无权提交长期记忆";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    h1 [label="只追加的事件日志\l完整保留原始事件，不修改已有记录\l", fillcolor="#f6f6f6"];
+    h2 [label="待审核的记忆提议\l标记为暂定，不直接写入长期记忆\l", fillcolor="#f2f2f2"];
+    h1 -> h2 [style=invis];
+  }
+
+  subgraph cluster_flush {
+    label="② 压缩前保存重要上下文（flush）· 按 token 用量提前触发";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    r1 [label="插入一个提醒回合，让模型把重要上下文写入持久化存储\lopenclaw 软阈值 4000 token\l压缩事件都是事后信号，无法保存已经丢失的内容\l", fillcolor="#eeeeee"];
+  }
+
+  subgraph cluster_offline {
+    label="③ 空闲期整理记忆 · 唯一有权提交长期记忆的进程";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    o1 [label="按优先级执行四项操作\l解决矛盾 ＞ 更新过时内容 ＞ 合并重复内容 ＞ 从多次事件中总结规律\l", fillcolor="#e8e8e8"];
+    o2 [label="提交条件（默认拒绝）\lopenclaw：必须同时满足分数、召回次数和独立查询次数要求\lcodex：没有可复用的经验时不提交任何内容\l", fillcolor="#e4e4e4"];
+    o3 [label="限制单次修改范围\l一次最多删除或覆盖 25% 的旧条目\l每项结果必须带有源事件 ID 集合\l", fillcolor="#e0e0e0"];
+    o1 -> o2 -> o3;
+  }
+
+  store [label="长期记忆\l事实与偏好（可改写，记录生效时间和存储时间）｜原始事件（不可变）\l", shape=box, style="filled,rounded", fillcolor="#d9d9d9"];
+
+  h2 -> r1 [label="会话推进"];
+  r1 -> o1 [label="会话结束 / 空闲"];
+  o3 -> store [label="提交"];
+  h1 -> store [label="直接保存原始事件（不可变）", style=dashed];
+}

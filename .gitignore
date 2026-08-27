@@ -1,0 +1,8 @@
+node_modules/
+.build/
+output/
+tmp/
+.impeccable/
+.DS_Store
+proofs/
+pnpm-lock.yaml

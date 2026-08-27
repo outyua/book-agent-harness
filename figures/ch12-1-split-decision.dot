@@ -1,0 +1,37 @@
+// 图 12-1 拆不拆的判定流程
+// 生成: dot -Tsvg ch12-1-split-decision.dot -o ch12-1-split-decision.svg
+digraph split {
+  rankdir=TB;
+  ranksep=0.32;
+  nodesep=0.34;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  t [label="任务 T", shape=box, style="filled,rounded", fillcolor="#e0e0e0"];
+
+  q1 [label="单窗口装得下\l且注意力不被稀释？\l", shape=diamond, style="filled", fillcolor="white", fontsize=9, height=1.0];
+  q2 [label="拆出的子任务之间\l需要共享隐式决策吗？\l", shape=diamond, style="filled", fillcolor="white", fontsize=9, height=1.0];
+  q3 [label="子任务可并行\l且交付物可独立验证？\l", shape=diamond, style="filled", fillcolor="white", fontsize=9, height=1.0];
+  q4 [label="需要的是可靠性\l还是分工？\l", shape=diamond, style="filled", fillcolor="white", fontsize=9, height=1.0];
+
+  s1 [label="单 agent 多轮\l信息论上界 · KV cache 可复用 · 最省\l", fillcolor="#f4f4f4"];
+  s2 [label="单线程 + 压缩\l采用第 8 章的压缩方法\l", fillcolor="#f0f0f0"];
+  s3 [label="按需加载的受控上下文块\l技能 / 渐进披露，不拆进程\l", fillcolor="#f0f0f0"];
+  s4 [label="并行 subagent + 上下文隔离\l中心化编排 + 校验节点\l", fillcolor="#e8e8e8"];
+  s5 [label="先测 采样 N 次 + 多数投票\l打不过它就别上 debate\l", fillcolor="#e8e8e8"];
+
+  t -> q1;
+  q1 -> s1 [label="是"];
+  q1 -> q2 [label="否"];
+  q2 -> s2 [label="需要"];
+  q2 -> q3 [label="不需要"];
+  q3 -> q4 [label="否"];
+  q3 -> s4 [label="是"];
+  q4 -> s5 [label="可靠性"];
+  q4 -> s3 [label="分工"];
+
+  gate [label="无论走哪条：对照组必须是「等 token 预算的单 agent + 采样投票」。\l赢不了它，收益就是幻觉。\l", shape=note, fillcolor="white", fontsize=10];
+  s4 -> gate [style=invis];
+}

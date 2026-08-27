@@ -1,0 +1,38 @@
+// 图 17-1 任务执行、人工改进与自动改进分别修改什么
+// 生成: dot -Tsvg ch17-1-three-loops.dot -o ch17-1-three-loops.svg
+digraph loops {
+  rankdir=LR;
+  ranksep=0.55;
+  nodesep=0.30;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  subgraph cluster_l0 {
+    label="任务执行循环（第 2–5 章）";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    a1 [label="模型产出 → 工具执行 → 结果回填 → 继续判定\l改的是：本次任务的中间状态\l周期：秒\l", fillcolor="#f4f4f4"];
+  }
+
+  subgraph cluster_l1 {
+    label="人工依据评测改进（本章 §17.2）";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    b1 [label="任务集 → 多次 trial → grader 打分 → 汇总\l改的是：harness 的配置与实现（人来改）\l周期：小时到天\l", fillcolor="#ececec"];
+  }
+
+  subgraph cluster_l2 {
+    label="agent 自动改写 harness（本章 §17.3）";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    c1 [label="轨迹 → 按任务与失败原因整理摘要 → 编辑 harness 组件 → 用下一轮结果判断修改是否有效\l改的是：harness 的配置与实现\l周期：天到周\l", fillcolor="#e2e2e2"];
+  }
+
+  a1 -> b1 [label="产出轨迹与结果"];
+  b1 -> a1 [label="改配置/实现"];
+  b1 -> c1 [label="产出可归因的失败证据"];
+  c1 -> b1 [label="改 harness 组件 + 可证伪的预测"];
+
+  note [label="没有稳定评测，就无法判断自动修改是否有效。\l没有可观测的执行轨迹，评测只能看到成败，无法分析原因。\l",
+        shape=note, fillcolor="white", fontsize=10];
+  c1 -> note [style=invis];
+}

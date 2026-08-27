@@ -1,0 +1,48 @@
+// 图 7-1 system prompt 的三类内容与缓存边界位置
+// 生成: dot -Tsvg ch07-1-prompt-layers.dot -o ch07-1-prompt-layers.svg
+digraph prompt_layers {
+  rankdir=TB;
+  ranksep=0.26;
+  nodesep=0.22;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333", width=6.2];
+  edge [style=invis];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  subgraph cluster_stable {
+    label="会话内不变内容 · 构成缓存前缀";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    p1 [label="① 身份句　　　你是谁 · 跑在哪 · 给谁干活", fillcolor="#f6f6f6"];
+    p2 [label="② 安全硬性规则　少数必须遵守的规则，用 NEVER / MUST", fillcolor="#f6f6f6"];
+    p3 [label="③ 系统行为说明　权限如何审批 · 何时发生压缩", fillcolor="#f2f2f2"];
+    p4 [label="④ 任务准则　　YAGNI · 跟随现有风格 · 先读后改", fillcolor="#f2f2f2"];
+    p5 [label="⑤ 操作风险　　是否可撤销 · 影响范围 · 何时确认", fillcolor="#f2f2f2"];
+    p6 [label="⑥ 工具政策　　哪个工具干什么 · 何时并行 · 何时委派", fillcolor="#eeeeee"];
+    p7 [label="⑦ 语气与格式　长度限制 · 禁语清单", fillcolor="#eeeeee"];
+    p1 -> p2 -> p3 -> p4 -> p5 -> p6 -> p7;
+  }
+
+  bd [label="⑧ 【缓存边界标记】　以下内容每轮可变", shape=box, style="filled,dashed", fillcolor="#d9d9d9", width=6.2];
+
+  subgraph cluster_ctx {
+    label="会话级内容 · 每次会话构建一次 · 压缩后重建";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    p9  [label="⑨ 环境信息　　cwd · OS · git（放置位置见 §7.3 判断标准一）", fillcolor="#f0f0f0"];
+    p10 [label="⑩ 项目指令　　AGENTS.md / CLAUDE.md + 信任降权声明", fillcolor="#f0f0f0"];
+    p11 [label="⑪ 技能与 MCP 目录　只放索引，详情按需加载", fillcolor="#f0f0f0"];
+    p9 -> p10 -> p11;
+  }
+
+  subgraph cluster_vol {
+    label="每轮可变内容 · 必须位于全部缓存断点之后";
+    labeljust=l; fontsize=11; color="#888888"; style="rounded";
+    v1 [label="时间 · 待办 · 审批状态 · 剩余预算 · 频道能力", fillcolor="#e4e4e4"];
+  }
+
+  p7 -> bd -> p9;
+  p11 -> v1;
+
+  note [label="各实现包含的内容类型相近，主要差异是缓存边界的位置，以及 ⑨⑩ 放在 system 还是 messages",
+        shape=note, fillcolor="white", fontsize=10, width=6.2];
+  v1 -> note;
+}

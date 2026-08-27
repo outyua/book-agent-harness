@@ -1,0 +1,54 @@
+// 图 5-1 四类失败与四条互不串线的恢复策略
+// 生成: dot -Tsvg ch05-1-recovery-chain.dot -o ch05-1-recovery-chain.svg
+digraph recovery {
+  rankdir=TB;
+  ranksep=0.34;
+  nodesep=0.28;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  fail [label="一次 LLM 调用失败 / 未产出工具调用", shape=box, style="filled,rounded", fillcolor="#e0e0e0"];
+
+  cls [label="先分类，再决定策略\n（四类策略不可互相串线）", shape=diamond, style="filled", fillcolor="white", fontsize=9, height=0.9];
+
+  subgraph cluster_a {
+    label="A · 传输层失败";
+    labeljust=l; fontsize=10; color="#888888"; style="rounded";
+    a1 [label="429 / 5xx / 网络中断", fillcolor="#f4f4f4"];
+    a2 [label="退避重试\lretry-after-ms → retry-after → 指数退避+抖动\l上界 5 次\l"];
+    a1 -> a2;
+  }
+
+  subgraph cluster_b {
+    label="B · 上下文超限";
+    labeljust=l; fontsize=10; color="#888888"; style="rounded";
+    b1 [label="413 / context overflow", fillcolor="#f4f4f4"];
+    b2 [label="永不重试\l先折叠 → 再压缩\l熔断：只允许恢复一次\l"];
+    b1 -> b2;
+  }
+
+  subgraph cluster_c {
+    label="C · 输出截断";
+    labeljust=l; fontsize=10; color="#888888"; style="rounded";
+    c1 [label="stopReason = length", fillcolor="#f4f4f4"];
+    c2 [label="整批工具判失败\l先单轮提额重试，再注入续写元消息\l熔断：续写次数上界\l"];
+    c1 -> c2;
+  }
+
+  subgraph cluster_d {
+    label="D · 语义空转";
+    labeljust=l; fontsize=10; color="#888888"; style="rounded";
+    d1 [label="连续 3 次同工具同参数", fillcolor="#f4f4f4"];
+    d2 [label="不立即终止循环\l弹出权限确认，由用户决定是否继续\l"];
+    d1 -> d2;
+  }
+
+  fail -> cls;
+  cls -> a1; cls -> b1; cls -> c1; cls -> d1;
+
+  note [label="共同纪律：每条回跳路径有名字、有计数器、有上界；上界耗尽后失败要能说清原因",
+        shape=note, fillcolor="white", fontsize=10];
+  a2 -> note [style=invis];
+}

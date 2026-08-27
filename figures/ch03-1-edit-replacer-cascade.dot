@@ -1,0 +1,51 @@
+// 图 3-1 opencode edit 工具的九级匹配级联与三种失败出口
+// 生成: dot -Tsvg ch03-1-edit-replacer-cascade.dot -o ch03-1-edit-replacer-cascade.svg
+digraph replacer {
+  rankdir=TB;
+  ranksep=0.28;
+  nodesep=0.30;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  in [label="模型给出 oldString\n（凭记忆复述，常有偏差）", shape=box, style="filled,rounded", fillcolor="#e0e0e0"];
+
+  subgraph cluster_cascade {
+    label="九级匹配级联：按严格度从高到低依次尝试，命中即停";
+    labeljust=l;
+    fontsize=11;
+    color="#888888";
+    style="rounded";
+
+    r1 [label="1 Simple　　　　　逐字节", fillcolor="#f6f6f6"];
+    r2 [label="2 LineTrimmed　　 忽略行首尾空白", fillcolor="#f2f2f2"];
+    r3 [label="3 BlockAnchor　　 首尾行锚定", fillcolor="#f2f2f2"];
+    r4 [label="4 WhitespaceNormalized　空白归一", fillcolor="#eeeeee"];
+    r5 [label="5 IndentationFlexible　 缩进可变", fillcolor="#eeeeee"];
+    r6 [label="6 EscapeNormalized　 转义归一", fillcolor="#eaeaea"];
+    r7 [label="7 TrimmedBoundary　 边界裁剪", fillcolor="#eaeaea"];
+    r8 [label="8 ContextAware　　 依上下文", fillcolor="#e6e6e6"];
+    r9 [label="9 MultiOccurrence　 多处出现", fillcolor="#e6e6e6"];
+
+    r1 -> r2 -> r3 -> r4 -> r5 -> r6 -> r7 -> r8 -> r9 [label="未命中"];
+  }
+
+  guard [label="拒绝范围过大的替换 isDisproportionateMatch\n匹配 span 远大于 oldString？", shape=diamond, style="filled", fillcolor="white", fontsize=9];
+  ok    [label="替换成功", shape=box, style="filled,rounded", fillcolor="#e0e0e0"];
+
+  f1 [label="失败 A · 匹配跨度过大\n「重读文件，给出完整精确的 oldString」"];
+  f2 [label="失败 B · 一处都没找到\n「必须精确匹配，含空白、缩进、行尾」"];
+  f3 [label="失败 C · 找到多处\n「提供更多上下文使匹配唯一」"];
+
+  in -> r1;
+  r1 -> guard [label="命中", constraint=false];
+  guard -> f1 [label="是"];
+  guard -> ok [label="否"];
+  r9 -> f2 [label="全部未命中"];
+  r9 -> f3 [label="命中但不唯一"];
+
+  note [label="三条失败信息都写成「模型下一步该做什么」，而不是「出了什么错」",
+        shape=note, fillcolor="white", fontsize=10];
+  f2 -> note [style=invis];
+}

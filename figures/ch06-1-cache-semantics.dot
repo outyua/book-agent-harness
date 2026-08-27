@@ -1,0 +1,33 @@
+// 图 6-1 四类缓存语义与对应策略（形状取自 goose CacheSemantics::for_model）
+// 生成: dot -Tsvg ch06-1-cache-semantics.dot -o ch06-1-cache-semantics.svg
+digraph cache_semantics {
+  rankdir=LR;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=11, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  q [label="按 (provider, model)\n查缓存语义", shape=box, style="filled,rounded", fillcolor="#e8e8e8"];
+
+  a [label="ExplicitBreakpoints\n调用方打标记\n上限 4 个", fillcolor="#f2f2f2"];
+  b [label="ImplicitTolerant\n服务端取最长匹配前缀", fillcolor="#f2f2f2"];
+  c [label="ImplicitStrict\n必须逐字节从头复现", fillcolor="#f2f2f2"];
+  d [label="Uncached\n无已知缓存", fillcolor="#f2f2f2"];
+
+  q -> a [label="Anthropic 系\nBedrock / Vertex 的 claude\nOpenRouter anthropic/*"];
+  q -> b [label="OpenAI Chat\nAzure / Copilot\n多数国产 API"];
+  q -> c [label="OpenAI Responses"];
+  q -> d [label="Snowflake\nSageMaker TGI"];
+  q -> c [label="未知组合 → 安全默认", style=dashed];
+
+  sa [label="策略：打断点\n最后一个工具 + system 尾\n+ 最近 1~2 条消息", shape=box, style="filled,rounded", fillcolor="white"];
+  sb [label="策略：不打标记\n只需保证前缀不倒退", shape=box, style="filled,rounded", fillcolor="white"];
+  sc [label="策略：不打标记\n且请求必须严格 append-only", shape=box, style="filled,rounded", fillcolor="white"];
+  sd [label="策略：省掉全部缓存开销\n不付写入溢价", shape=box, style="filled,rounded", fillcolor="white"];
+
+  a -> sa; b -> sb; c -> sc; d -> sd;
+
+  warn [label="给自动缓存厂商打断点 = 无效负载\n给显式厂商漏打 = 全额冷启动",
+        shape=note, fillcolor="white", fontsize=10];
+  sb -> warn [style=invis];
+}

@@ -1,0 +1,29 @@
+// 图 16-1 四层交付流程与人工审核位置
+// 生成: dot -Tsvg ch16-1-delivery-layers.dot -o ch16-1-delivery-layers.svg
+digraph delivery {
+  rankdir=TB;
+  ranksep=0.30;
+  nodesep=0.26;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333", width=6.4];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  l1 [label="第 1 层 · Issue 规范（人定规则）\lissue 就是发给 agent 的提示词：验收标准 · 原子化 · 指出改哪些文件\l入口表单 · 分类学 · 分诊状态机 + SLA · 意图外化\l", fillcolor="#f6f6f6"];
+
+  l2 [label="第 2 层 · 规则自动化（确定性）\l凡是能写成规则的，不用人也不用 LLM\l事件驱动 · 标准动作库 · 最小权限 App token · IssueOps 状态机\l", fillcolor="#f0f0f0"];
+
+  l3 [label="第 3 层 · Coding Agent（非确定性）\lissue/评论触发 → 一次性云沙箱 → 写码跑测试 → 开 PR\l六款产品采用相同的交付流程，主要差异是触发方式与权限限制（本书普查，2026-08-04）\l", fillcolor="#e8e8e8"];
+
+  l4 [label="第 4 层 · Agentic CI/CD\lAI review 进 PR gate · CI 失败自动修 · 测试生成 · release notes\l前提：确定性基线（trunk-based · 语义化发布 · 渐进交付）已经在\l", fillcolor="#e0e0e0"];
+
+  gate [label="◆ 人审 merge · 人批发布 ◆\l§16.2.3 表内六款产品默认如此，GitHub 把它做成了平台机制：\lagent 不能 approve、不能 merge；agent 的 commit 默认不触发 CI（2026-03-13 起管理员可关）\l", shape=box, style="filled,rounded", fillcolor="#c8c8c8", width=6.4];
+
+  prod [label="生产", shape=box, style="filled,rounded", fillcolor="white", width=6.4];
+
+  l1 -> l2 -> l3 -> l4 -> gate -> prod;
+
+  note [label="先在规范中定义 SLA，再由自动化规则执行并测量 SLA；\l这两项稳定运行后，再接入 agent。",
+        shape=note, fillcolor="white", fontsize=10, width=6.4];
+  prod -> note [style=invis];
+}

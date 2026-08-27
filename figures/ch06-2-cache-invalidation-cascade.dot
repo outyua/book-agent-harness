@@ -1,0 +1,70 @@
+// 图 6-2 一次请求的渲染顺序、断点位置与失效级联
+// 生成: dot -Tsvg ch06-2-cache-invalidation-cascade.dot -o ch06-2-cache-invalidation-cascade.svg
+digraph cache_cascade {
+  rankdir=TB;
+  ranksep=0.38;
+  nodesep=0.30;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=11, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  subgraph cluster_req {
+    label="请求体（服务端按此顺序拼成一条 token 序列）";
+    labeljust=l;
+    fontsize=12;
+    color="#888888";
+    style="rounded";
+
+    tools  [label="① tools\n工具定义（名称 / 描述 / schema）", fillcolor="#f2f2f2"];
+    system [label="② system\n身份 · 安全 · 工具政策 · 语气", fillcolor="#f2f2f2"];
+    msgs   [label="③ messages\n历史对话 + 工具调用与结果", fillcolor="#f2f2f2"];
+
+    bp1 [label="断点 1", shape=box, style="filled,dashed", fillcolor="white", fontsize=9];
+    bp2 [label="断点 2", shape=box, style="filled,dashed", fillcolor="white", fontsize=9];
+    bp3 [label="断点 3\nmessages[-2]", shape=box, style="filled,dashed", fillcolor="white", fontsize=9];
+    bp4 [label="断点 4\nmessages[-1]", shape=box, style="filled,dashed", fillcolor="white", fontsize=9];
+
+    tools -> bp1 [arrowhead=none, style=dotted];
+    bp1 -> system [arrowhead=none, style=dotted];
+    system -> bp2 [arrowhead=none, style=dotted];
+    bp2 -> msgs [arrowhead=none, style=dotted];
+    msgs -> bp3 [arrowhead=none, style=dotted];
+    bp3 -> bp4 [arrowhead=none, style=dotted];
+  }
+
+  tail [label="尾部未缓存区\n时间 / 待办 / 审批状态 / 频道\n（每轮都变，放这里不产生代价）",
+        shape=box, style="filled,rounded", fillcolor="#e8e8e8"];
+  bp4 -> tail [arrowhead=none, style=dotted];
+
+  subgraph cluster_hit {
+    label="修改位置决定重新计算的范围（前缀匹配：改一个字节，其后全部作废）";
+    labeljust=l;
+    fontsize=12;
+    color="#888888";
+    style="rounded";
+
+    e1 [label="改工具描述\n或增删工具", shape=box, style="filled", fillcolor="white"];
+    e2 [label="改 system\n任意一节", shape=box, style="filled", fillcolor="white"];
+    e3 [label="改写 / 删除\n历史消息", shape=box, style="filled", fillcolor="white"];
+    e4 [label="只在尾部追加", shape=box, style="filled", fillcolor="white"];
+
+    r1 [label="①②③ 全部重算\n代价最高", shape=box, style="filled", fillcolor="#d9d9d9"];
+    r2 [label="②③ 重算", shape=box, style="filled", fillcolor="#e6e6e6"];
+    r3 [label="从改动点起重算", shape=box, style="filled", fillcolor="#f0f0f0"];
+    r4 [label="零重算\n唯一免费的写法", shape=box, style="filled", fillcolor="white"];
+
+    // 按严重度从左到右排定，与左栏自上而下的位置一一对应
+    { rank=same; e1 -> e2 -> e3 -> e4 [style=invis]; }
+    { rank=same; r1 -> r2 -> r3 -> r4 [style=invis]; }
+
+    e1 -> r1; e2 -> r2; e3 -> r3; e4 -> r4;
+
+    note [label="例外：换模型 / 换 TTL 档位 / 改 thinking 开关\n整段冷启动，与改动位置无关",
+          shape=note, fillcolor="white", fontsize=10];
+    r1 -> note [style=invis];
+    r2 -> note [style=invis];
+    r3 -> note [style=invis];
+    r4 -> note [style=invis];
+  }
+}

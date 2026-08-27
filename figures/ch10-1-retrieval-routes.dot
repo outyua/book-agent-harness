@@ -1,0 +1,30 @@
+// 图 10-1 四种代码检索方法：成本来源与适用规模
+// 生成: dot -Tsvg ch10-1-retrieval-routes.dot -o ch10-1-retrieval-routes.svg
+digraph routes {
+  rankdir=LR;
+  ranksep=0.50;
+  nodesep=0.26;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  q [label="agent 要找一段代码", shape=box, style="filled,rounded", fillcolor="#e0e0e0"];
+
+  r1 [label="① 词法检索　grep / ripgrep\l建索引成本：0\l查询成本：一次工具调用\l要求：模型猜得出关键字\l", fillcolor="#f6f6f6"];
+  r2 [label="② 结构检索　tree-sitter code map\l建索引成本：一次解析\l查询成本：低\l要求：语言有 parser\l", fillcolor="#f0f0f0"];
+  r3 [label="③ 语义检索　嵌入索引\l建索引成本：高（需持续增量）\l查询成本：一次向量检索\l要求：训练/选型 + 服务端设施\l", fillcolor="#e8e8e8"];
+  r4 [label="④ 预编译　LLM Wiki\l建索引成本：最高（LLM 摄取全部源）\l查询成本：读几页 markdown\l要求：知识稳定、规模在百页级\l", fillcolor="#e0e0e0"];
+
+  q -> r1 [label="全部本地开源 agent 的默认"];
+  q -> r2 [label="codebuff"];
+  q -> r3 [label="Cursor（自训嵌入模型）"];
+  q -> r4 [label="Karpathy 模式 / DeepWiki"];
+
+  o1 [label="小仓库 · 关键字明确时最优\l零维护，零陈旧风险\l", shape=box, style="filled,rounded", fillcolor="white"];
+  o2 [label="需要「谁调用了它」这类结构问题时\l", shape=box, style="filled,rounded", fillcolor="white"];
+  o3 [label="千文件以上收益显著\l与 grep 组合使用才最好\l", shape=box, style="filled,rounded", fillcolor="white"];
+  o4 [label="百页级、稳定、高频集中查询时占优\l规模上去后 token 反而更贵\l", shape=box, style="filled,rounded", fillcolor="white"];
+
+  r1 -> o1; r2 -> o2; r3 -> o3; r4 -> o4;
+}

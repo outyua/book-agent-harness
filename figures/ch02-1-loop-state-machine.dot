@@ -1,0 +1,42 @@
+// 图 2-1 循环伪代码：一轮的八个阶段与三种返回结果
+// 生成: dot -Tsvg ch02-1-loop-state-machine.dot -o ch02-1-loop-state-machine.svg
+digraph loop {
+  rankdir=TB;
+  ranksep=0.32;
+  nodesep=0.35;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333"];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  start [label="进入一轮", shape=box, style="filled,rounded", fillcolor="#e0e0e0"];
+
+  s1 [label="① 注入 steering 消息\l    （上一批工具已完成，本次调用之前）\l"];
+  s2 [label="② 整形上下文\l    工具结果预算 → 裁剪 → 压缩判定\l", fillcolor="#f2f2f2"];
+  s3 [label="③ 流式调用 LLM\l    StreamFn 永不 throw\l", fillcolor="#f2f2f2"];
+
+  d1 [label="stopReason\nerror / aborted？", shape=diamond, style="filled", fillcolor="white", fontsize=9];
+  d2 [label="按内容块扫到\ntool_use？", shape=diamond, style="filled", fillcolor="white", fontsize=9];
+
+  s4 [label="④ 串行 preflight\l    查表 · 校验 · 权限（顺序确定）\l", fillcolor="#f2f2f2"];
+  s5 [label="⑤ 并发 execute\l    失败一律回填 isError，不中断循环\l", fillcolor="#f2f2f2"];
+  s6 [label="⑥ 按源序回填 toolResult\l    事件按完成序发，消息按源序排\l", fillcolor="#f2f2f2"];
+  s7 [label="⑦ 注入附件与排队消息\l    必须在全部 toolResult 之后\l", fillcolor="#f2f2f2"];
+
+  s8 [label="⑧ 恢复链（每条配熔断）\l    上下文超限 → 媒体过大 → 输出截断\l"];
+  d3 [label="有 followUp？", shape=diamond, style="filled", fillcolor="white", fontsize=9];
+
+  e1 [label="出口 A · 异常收尾\n发 turn_end + agent_end", shape=box, style="filled,rounded", fillcolor="#d9d9d9"];
+  e2 [label="出口 B · 正常结束", shape=box, style="filled,rounded", fillcolor="#e6e6e6"];
+
+  start -> s1 -> s2 -> s3 -> d1;
+  d1 -> e1 [label="是"];
+  d1 -> d2 [label="否"];
+  d2 -> s4 [label="有"];
+  s4 -> s5 -> s6 -> s7;
+  s7 -> s1 [label="出口 C · 继续下一轮", constraint=false];
+  d2 -> s8 [label="无"];
+  s8 -> d3;
+  d3 -> s1 [label="有", constraint=false];
+  d3 -> e2 [label="无"];
+}

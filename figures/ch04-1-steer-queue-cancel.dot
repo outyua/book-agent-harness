@@ -1,0 +1,38 @@
+// 图 4-1 用户在工具执行途中输入时，三种语义的注入点
+// 生成: dot -Tsvg ch04-1-steer-queue-cancel.dot -o ch04-1-steer-queue-cancel.svg
+digraph steering {
+  rankdir=LR;
+  ranksep=0.45;
+  nodesep=0.22;
+  bgcolor="white";
+  node [fontname="Helvetica,Arial,sans-serif", fontsize=10, shape=box, style="filled", fillcolor="white", color="#333333", height=0.42];
+  edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#333333"];
+  graph [fontname="Helvetica,Arial,sans-serif", fontsize=11];
+
+  subgraph cluster_t {
+    label="时间轴：用户在 ★ 处输入（工具正在跑）";
+    labeljust=l;
+    fontsize=11;
+    color="#888888";
+    style="rounded";
+
+    t1 [label="LLM 调用", fillcolor="#f2f2f2"];
+    t2 [label="工具执行中 ★", fillcolor="#e0e0e0"];
+    t3 [label="turn 边界", shape=box, style="filled,dashed", fillcolor="white"];
+    t4 [label="下一次 LLM 调用", fillcolor="#f2f2f2"];
+    t5 [label="run 结束", shape=box, style="filled,dashed", fillcolor="white"];
+
+    t1 -> t2 -> t3 -> t4 -> t5;
+  }
+
+  s [label="steer（插话）\l注入点：turn 边界，本次 LLM 调用之前\l不打断在途工具 · 整批一次性提升\l"];
+  q [label="queue（排队）\l注入点：run 结束、会话空闲后\l一次只提升一条\l"];
+  c [label="cancel（打断）\l立即 abort 在途工具\l留下孤儿 tool_call，须清理（第 2 章）\l"];
+
+  t3 -> s [style=dashed, arrowhead=none];
+  t5 -> q [style=dashed, arrowhead=none];
+  t2 -> c [style=dashed, arrowhead=none];
+
+  note [label="三者不是强弱之分，是三种不同承诺：\l「下一步改方向」「做完再说」「现在就停」\l", shape=note, fillcolor="white", fontsize=10];
+  q -> note [style=invis];
+}

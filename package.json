@@ -1,0 +1,16 @@
+{
+  "name": "book-agent-harness",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-book.mjs",
+    "verify": "bash verify-citations.sh",
+    "cover": "node scripts/render-cover.mjs"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "marked": "^15.0.0",
+    "playwright": "^1.50.0",
+    "temml": "0.13.4"
+  }
+}

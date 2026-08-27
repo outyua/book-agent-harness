@@ -1,0 +1,9 @@
+# Cloudflare 静态资源响应头：文本类文件显式声明 UTF-8，否则浏览器可能按本地编码猜测
+/*.txt
+  Content-Type: text/plain; charset=utf-8
+/*.md
+  Content-Type: text/markdown; charset=utf-8
+/book/*.md
+  Content-Type: text/markdown; charset=utf-8
+/*.xml
+  Content-Type: application/xml; charset=utf-8

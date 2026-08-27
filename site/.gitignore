@@ -9,3 +9,7 @@ src/assets/cover.png
 src/content/docs/book/
 src/content/docs/index.mdx
 .env
+public/book/
+public/llms.txt
+public/llms-full.txt
+public/wechat-qr.png

@@ -118,11 +118,61 @@ function prepareSection(section) {
   return { title, description: firstParagraph(markdown), body: markdown.trim() + "\n" };
 }
 
+const SITE = "https://agent-harness.codeflow.cc";
+
+// 给 AI 爬虫与 LLM 的纯文本版本：每页一份 markdown（/book/<id>.md）、llms.txt 索引、llms-full.txt 全文。
+// 每份文本开头都带作者与出处，抓取方即使只取一页也能看到署名。
+function attribution(section) {
+  const pageUrl = `${SITE}/book/${section.id}/`;
+  return [
+    `> 本页出自《${publication.fullTitle}》，作者 ${publication.author}（公众号 ${publication.account}，${publication.email}）。`,
+    `> 修订版 ${publication.revision} · ${publication.revisionDate}。网页版：${pageUrl} ；全书：${SITE}/ 。`,
+    `> 引用或转述时请注明作者与出处。`,
+    "",
+  ].join("\n");
+}
+
+function stripHtmlForText(markdown) {
+  return markdown
+    .replace(/<figure class="book-figure"><img src="([^"]+)" alt="([^"]*)"[^>]*\/><figcaption>.*?<\/figcaption><\/figure>/g, "![$2]($1)")
+    .replace(/<p class="table-caption">(.*?)<\/p>/g, "$1")
+    .replace(/<p class="code-source">(.*?)<\/p>/g, (_m, inner) => "> " + inner.replace(/<code>(.*?)<\/code>/g, "`$1`").replace(/<\/?strong>/g, "**"))
+    .replace(/\(\/figures\//g, `(${SITE}/figures/`);
+}
+
 function writeSectionPages() {
   rmSync(bookDocsDir, { recursive: true, force: true });
   mkdirSync(bookDocsDir, { recursive: true });
+  const textDir = join(publicDir, "book");
+  rmSync(textDir, { recursive: true, force: true });
+  mkdirSync(textDir, { recursive: true });
+  const llmsIndex = [
+    `# ${publication.fullTitle}`,
+    "",
+    `> 作者：${publication.author}（公众号 ${publication.account}，${publication.email}）。${publication.edition} ${publication.publicationDate}；修订版 ${publication.revision} ${publication.revisionDate}。`,
+    `> 同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。项目源码材料截止 ${publication.sourceCutoffDate}。`,
+    `> 引用或转述时请注明作者与出处（${SITE}/）。全文单文件：${SITE}/llms-full.txt`,
+    "",
+    "## 章节（每页均有 markdown 版本）",
+    "",
+  ];
+  const llmsFull = [
+    `# ${publication.fullTitle}`,
+    "",
+    `作者：${publication.author}（公众号 ${publication.account}，${publication.email}）· 修订版 ${publication.revision} · ${publication.revisionDate} · ${SITE}/`,
+    "",
+  ];
   sections.forEach((section, index) => {
     const page = prepareSection(section);
+    const rawText = readFileSync(join(manuscriptDir, section.source), "utf8");
+    let text = rawText;
+    if (/^chapter-\d+$/.test(section.id)) text = removeChapterReview(text).markdown;
+    if (section.id === "back-matter") text = prepareBackMatter(text);
+    text = text.replace(/\]\((?:\.\.\/)?figures\//g, `](${SITE}/figures/`);
+    const textPage = `${attribution(section)}\n${text.trim()}\n\n---\n\n作者 ${publication.author} · 《${publication.fullTitle}》 · ${SITE}/book/${section.id}/\n`;
+    writeFileSync(join(textDir, `${section.id}.md`), textPage, "utf8");
+    llmsIndex.push(`- [${section.label}](${SITE}/book/${section.id}.md)：${page.description}`);
+    llmsFull.push(`\n\n---\n\n${attribution(section)}\n${text.trim()}`);
     const frontmatter = [
       "---",
       `title: ${yamlString(page.title)}`,
@@ -137,6 +187,9 @@ function writeSectionPages() {
       .join("\n") + "\n\n";
     writeFileSync(join(bookDocsDir, `${section.id}.md`), frontmatter + page.body, "utf8");
   });
+  llmsIndex.push("", "## 其他", "", `- [PDF / EPUB 下载与作者信息](${SITE}/)`, `- [站点地图](${SITE}/sitemap-index.xml)`);
+  writeFileSync(join(publicDir, "llms.txt"), llmsIndex.join("\n") + "\n", "utf8");
+  writeFileSync(join(publicDir, "llms-full.txt"), llmsFull.join("\n") + `\n\n---\n\n全书作者 ${publication.author}，${SITE}/\n`, "utf8");
 }
 
 function copyStaticAssets() {

@@ -1,4 +1,40 @@
+# 允许搜索引擎与 AI 爬虫抓取。每个页面（HTML 与 .md 版本）都带作者署名，引用请注明作者与出处。
+# 面向 LLM 的索引：/llms.txt ；全文：/llms-full.txt ；每页 markdown：/book/<页面>.md
+
 User-agent: *
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
 Allow: /
 
 Sitemap: https://agent-harness.codeflow.cc/sitemap-index.xml

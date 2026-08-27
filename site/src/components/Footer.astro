@@ -7,6 +7,7 @@ const { entry } = Astro.locals.starlightRoute;
 const isSplash = entry.data.template === 'splash';
 const pageTitle = entry.data.title;
 const pageUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://agent-harness.codeflow.cc').href;
+const markdownUrl = pageUrl.replace(/\/$/, '.md');
 const subject = encodeURIComponent(`《${publication.title}》反馈：${pageTitle}`);
 const body = encodeURIComponent(`页面：${pageUrl}\n\n（请写下你发现的问题、疑问或建议；勘误请附上原文片段。）\n`);
 const mailto = `mailto:${publication.email}?subject=${subject}&body=${body}`;
@@ -33,8 +34,9 @@ const articleLd = JSON.stringify({
 	!isSplash && (
 		<>
 		<script type="application/ld+json" set:html={articleLd} />
+		<link rel="alternate" type="text/markdown" href={markdownUrl} title="Markdown 版" />
 		<p class="byline">
-			本页出自《{publication.fullTitle}》 · 作者 <a href="/" rel="author">{publication.author}</a> · 修订版 {publication.revision}（{publication.revisionDate}）
+			本页出自《{publication.fullTitle}》 · 作者 <a href="/" rel="author">{publication.author}</a> · 修订版 {publication.revision}（{publication.revisionDate}） · <a href={markdownUrl} type="text/markdown">Markdown 版</a>
 		</p>
 		<aside class="feedback" aria-labelledby="feedback-heading">
 			<h2 id="feedback-heading">反馈与勘误</h2>

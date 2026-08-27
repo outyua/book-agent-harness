@@ -1,12 +1,53 @@
-# Book Project — 《Agent Harness 工程：从源码里读出的设计决策》
-
-**全书完稿** · 2026-08-17 · 2026-08-27 按 `projects/` 最新源码同步复核一轮（见 `manuscript/STATUS.md`） · 约 20.2 万字符 · 17 章分六个部 + 前言后记 · 18 张图
-
-## 一句话
+# 《Agent Harness 工程：从源码里读出的设计决策》
 
 同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。
 
-## 目录
+- 在线阅读：<https://agent-harness.codeflow.cc>
+- 电子书：PDF / EPUB 由 `scripts/build-book.mjs` 生成，网站首页提供下载
+- 作者 王吕 · 公众号 Codeflow · wanglv93@gmail.com
+
+## 仓库布局
+
+| 目录 | 内容 |
+|---|---|
+| `manuscript/` | 书稿正文：`ch00` 前言 → `part1`–`part6` 部扉页与 `ch01`–`ch17` → `ch99` 后记；`STATUS.md` 记录稿件状态与历次复核 |
+| `figures/` | 18 张图的 Graphviz DOT 源码与 SVG |
+| `assets/` | 封面、羊版画、二维码、随书字体子集（OFL） |
+| `styles/` | 电子书 PDF/EPUB 样式 |
+| `scripts/` | 电子书构建：`build-book.mjs`（PDF + EPUB）、`render-cover.mjs`（封面）、`lib/manuscript.mjs`（章节顺序、出版信息与读者版清理逻辑，电子书与网站共用） |
+| `site/` | Astro + Starlight 网站，`scripts/sync-content.mjs` 从 `manuscript/` 生成页面 |
+| `.github/workflows/deploy.yml` | 推送 `main` 后自动构建电子书与网站并发布到 Cloudflare Pages |
+| `verify-citations.sh` | 引用校验脚本（需要上层仓库的 `projects/` 目录，见下） |
+| `editorial-standards.md` 等 | 主编手册、选题记录、排版标准、引用体例 |
+
+## 本地构建
+
+```bash
+pnpm install                                   # 电子书依赖：marked、playwright、jszip、temml
+pnpm exec playwright install chromium-headless-shell   # 首次：PDF 渲染用的 Chromium
+pnpm build                                     # 生成 output/pdf、output/epub、assets/cover.png 不变
+pnpm cover                                     # 只重渲染封面
+
+pnpm --dir site install
+pnpm --dir site build                          # 同步书稿 → site/src/content/docs，产出 site/dist
+pnpm --dir site dev                            # 本地预览 http://localhost:4321
+```
+
+网站构建时会把 `output/` 里已有的 PDF/EPUB 复制到 `site/public/downloads/`；本地没跑过电子书构建时首页只有「开始阅读」按钮。网站与电子书共用同一份读者版清理规则（去掉各章「版本与复核」与后记里的内部复核说明），所以两边内容一致。
+
+## 发布到 Cloudflare Pages
+
+工作流 `.github/workflows/deploy.yml` 在每次推送 `main` 时：安装依赖 → 构建 PDF/EPUB → 构建网站 → `wrangler pages deploy site/dist --project-name=book-agent-harness`。首次需要三步手工配置：
+
+1. 在 Cloudflare 创建 Pages 项目 `book-agent-harness`（Direct Upload 类型；或本地 `pnpm dlx wrangler pages project create book-agent-harness --production-branch main`）。
+2. 在 GitHub 仓库 Settings → Secrets 添加 `CLOUDFLARE_API_TOKEN`（权限：Account · Cloudflare Pages · Edit）与 `CLOUDFLARE_ACCOUNT_ID`。也可以用 `gh secret set CLOUDFLARE_API_TOKEN` / `gh secret set CLOUDFLARE_ACCOUNT_ID`。
+3. 在 Pages 项目的 Custom domains 里添加 `agent-harness.codeflow.cc`（`codeflow.cc` 托管在 Cloudflare 时 DNS 记录会自动创建）。
+
+之后每次推送 `main` 自动发布；Actions 页面同时会挂上本次构建的 PDF/EPUB 产物（保留 30 天）。
+
+## 写作与校验
+
+### 目录
 
 | 文件 | 内容 |
 |---|---|
@@ -18,7 +59,7 @@
 | [`verify-citations.sh`](verify-citations.sh) | 机器校验脚本（引用解析 / 体例 / 语言纪律 / 交叉引用） |
 | [`figures/`](figures/) | 18 张图的 Graphviz DOT 源码与 SVG |
 
-## 章节
+### 章节
 
 阅读顺序自上而下：每个部的扉页读完再读该部各章。
 
@@ -44,7 +85,7 @@
 | **6 · 验证**（`part6-verification.md`） | 17 | 评测与二阶回路 | 评结果不评轨迹；没有回归集，前 16 章都是净风险 |
 | — | 后记 | 术语表 · 项目索引 · 参考文献 | 含「本书没有覆盖的」与资料截止日期；本书用三张表替代传统主题索引 |
 
-## 校验
+### 校验
 
 ```bash
 bash book-agent-harness/verify-citations.sh
@@ -56,7 +97,7 @@ bash book-agent-harness/verify-citations.sh
 
 **这个脚本发现不了什么**：它只能发现「引用失效」，发现不了「引用有效但当初的概括是错的」。后者在写作中真实发生过两次，见 `manuscript/STATUS.md`。
 
-## 电子书成品
+### 电子书成品
 
 出版版采用 6×9 英寸开本，包含封面、书名页、出版信息、目录、六个部扉页、17 章正文、后记和作者页。封面动物是一只羊：`imagegen` 生成黑白自然史版画，书名和作者名由排版程序叠加，避免生成式图片出现错字。公众号与个人微信二维码并列放在书末作者页，保留足够留白以便扫描。
 
@@ -68,16 +109,9 @@ bash book-agent-harness/verify-citations.sh
 - `output/epub/agent-harness-engineering.epub`
 - `assets/cover.png`
 
-出版信息采用当前已知事实：作者王吕，邮箱 `wanglv93@gmail.com`，公众号 `Codeflow`，电子版第一版日期 `2026-08-19`。 修订版本号与修订日期在 `scripts/build-book.mjs` 的 `publication.revision` / `revisionDate` 维护，当前为修订版 1.1（2026-08-27），版权页「修订」行与书末作者页均会显示；作者署名统一为「作者 王吕」。没有虚构出版社与书号，版权页明确写作“ISBN 未申请”。
+出版信息采用当前已知事实：作者王吕，邮箱 `wanglv93@gmail.com`，公众号 `Codeflow`，电子版第一版日期 `2026-08-19`。 修订版本号与修订日期在 `scripts/lib/manuscript.mjs` 的 `publication.revision` / `revisionDate` 维护，当前为修订版 1.1（2026-08-27），版权页「修订」行与书末作者页均会显示；作者署名统一为「作者 王吕」。没有虚构出版社与书号，版权页明确写作“ISBN 未申请”。
 
-构建脚本是 `scripts/build-book.mjs`。它需要 Node.js 依赖 `marked`、`playwright`、`jszip` 和 `temml`。Temml 在构建期把 LaTeX 转成 MathML；PDF 页眉、页码和书签由 Chromium 原生分页与 outline 生成，不再经过会丢失 PDF 标签结构的合并后处理。在仓库根目录安装依赖并构建（首次需要下载 Playwright 的 Chromium）：
-
-```bash
-cd book-agent-harness
-npm install
-npx playwright install chromium-headless-shell
-node scripts/build-book.mjs
-```
+构建脚本是 `scripts/build-book.mjs`（命令见上文「本地构建」）。出版信息与修订版本号在 `scripts/lib/manuscript.mjs` 的 `publication` 里维护。Temml 在构建期把 LaTeX 转成 MathML；PDF 页眉、页码和书签由 Chromium 原生分页与 outline 生成。
 
 正文使用随书嵌入的 Noto Serif SC / Noto Sans SC 字形子集，授权文本在 `assets/fonts/`。构建后的 SHA-256、PDF 页数、标签状态、公式数、表格数、插图数和 EPUB 图数写入 `.build/build-manifest.json`。PDF 需要按 `pdf` 技能要求渲染为 PNG 做目检；EPUB 需要运行 EPUBCheck、ZIP、XML/XHTML 和资源引用校验，不能只看扩展名。2026-08-20 的正式读者版为 384 页，Tagged PDF = yes，2 个 MathML、0 个原始 `$$`；EPUBCheck 5.3.0 为 0 error / 0 warning。
 

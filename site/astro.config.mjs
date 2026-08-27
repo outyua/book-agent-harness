@@ -51,9 +51,6 @@ export default defineConfig({
 			},
 			logo: { src: './src/assets/cover.png', alt: publication.fullTitle },
 			favicon: '/favicon.svg',
-			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/outyua/book-agent-harness' },
-			],
 			customCss: ['./src/styles/book.css'],
 			tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
 			lastUpdated: false,

@@ -186,10 +186,9 @@ description: ${yamlString("同一个工程问题，23 个真实 coding agent 分
 template: splash
 hero:
   title: ${yamlString(publication.title)}
-  tagline: ${yamlString(publication.subtitle + " —— 同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。")}
+  tagline: ${yamlString(`${publication.subtitle}<br />同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。<br /><span class="hero-meta">作者 ${publication.author} · ${publication.edition} ${publication.publicationDate} · 修订版 ${publication.revision} ${publication.revisionDate}</span>`)}
   image:
-    file: ../../assets/cover.png
-    alt: ${yamlString(publication.fullTitle + "封面")}
+    html: ${yamlString(`<img class="book-cover" src="/cover.png" width="600" height="900" alt="${publication.fullTitle}封面" loading="eager" decoding="async" />`)}
   actions:
 ${actionsYaml}
 ---

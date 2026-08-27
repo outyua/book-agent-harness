@@ -27,6 +27,8 @@ const docsDir = join(siteDir, "src", "content", "docs");
 const bookDocsDir = join(docsDir, "book");
 const publicDir = join(siteDir, "public");
 
+const releaseBase = "https://github.com/outyua/book-agent-harness/releases/latest/download";
+
 const downloads = {
   pdf: "agent-harness-engineering.pdf",
   epub: "agent-harness-engineering.epub",
@@ -143,6 +145,9 @@ function copyStaticAssets() {
       available[kind] = `/downloads/${name}`;
     } else if (existsSync(join(downloadsOut, name))) {
       available[kind] = `/downloads/${name}`;
+    } else {
+      // 没有本地构建产物（例如 Cloudflare 构建环境）时，指向 GitHub Action 发布的最新 Release 附件
+      available[kind] = `${releaseBase}/${name}`;
     }
   }
   return available;
@@ -220,5 +225,5 @@ writeSectionPages();
 const available = copyStaticAssets();
 writeIndexPage(available);
 console.log(
-  `同步完成：${sections.length} 个页面，下载：${Object.keys(available).join("、") || "无（先运行电子书构建）"}`,
+  `同步完成：${sections.length} 个页面，下载链接：${Object.values(available).join(" ")}`,
 );

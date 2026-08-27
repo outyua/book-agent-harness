@@ -35,15 +35,21 @@ pnpm --dir site dev                            # 本地预览 http://localhost:4
 
 网站构建时会把 `output/` 里已有的 PDF/EPUB 复制到 `site/public/downloads/`；本地没跑过电子书构建时首页只有「开始阅读」按钮。网站与电子书共用同一份读者版清理规则（去掉各章「版本与复核」与后记里的内部复核说明），所以两边内容一致。
 
-## 发布到 Cloudflare Pages
+## 发布
 
-工作流 `.github/workflows/deploy.yml` 在每次推送 `main` 时：安装依赖 → 构建 PDF/EPUB → 构建网站 → `wrangler pages deploy site/dist --project-name=book-agent-harness`。首次需要三步手工配置：
+**网站：Cloudflare Workers Builds（Git 集成，推送即部署）。** 在 Cloudflare 控制台「Workers & Pages → 创建 → 连接 Git 仓库」选择 `outyua/book-agent-harness`，按下面填写：
 
-1. 在 Cloudflare 创建 Pages 项目 `book-agent-harness`（Direct Upload 类型；或本地 `pnpm dlx wrangler pages project create book-agent-harness --production-branch main`）。
-2. 在 GitHub 仓库 Settings → Secrets 添加 `CLOUDFLARE_API_TOKEN`（权限：Account · Cloudflare Pages · Edit）与 `CLOUDFLARE_ACCOUNT_ID`。也可以用 `gh secret set CLOUDFLARE_API_TOKEN` / `gh secret set CLOUDFLARE_ACCOUNT_ID`。
-3. 在 Pages 项目的 Custom domains 里添加 `agent-harness.codeflow.cc`（`codeflow.cc` 托管在 Cloudflare 时 DNS 记录会自动创建）。
+| 字段 | 值 |
+|---|---|
+| 项目名称 | `book-agent-harness`（与 `wrangler.jsonc` 的 `name` 一致） |
+| 构建命令 | `pnpm --dir site install && pnpm --dir site build` |
+| 部署命令 | `npx wrangler deploy` |
+| 根目录（高级设置） | 留空（仓库根，`wrangler.jsonc` 在这里） |
+| 非生产分支构建 | 可勾选，得到预览地址 |
 
-之后每次推送 `main` 自动发布；Actions 页面同时会挂上本次构建的 PDF/EPUB 产物（保留 30 天）。
+`wrangler.jsonc` 把 Worker 配成纯静态资源模式（`assets.directory = site/dist`），并声明自定义域名 `agent-harness.codeflow.cc`（`routes[].custom_domain`），首次部署时 Cloudflare 会自动在 `codeflow.cc` 区域里创建该记录；也可以在 Worker 的 Settings → Domains & Routes 里手工添加。之后每次推送 `main`，Cloudflare 自动重新构建并发布。
+
+**电子书：GitHub Action → GitHub Release。** `.github/workflows/ebook.yml` 在书稿、图、素材或构建脚本变动时运行，用 Chromium 生成 PDF/EPUB，发布到 Release `latest`。网站首页的下载按钮在 Cloudflare 构建环境里没有本地成品时，自动指向 `https://github.com/outyua/book-agent-harness/releases/latest/download/…`。仓库为私有时这些链接需要登录 GitHub 才能下载；公开仓库可直接访问。
 
 ## 写作与校验
 

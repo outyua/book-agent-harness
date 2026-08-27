@@ -1,0 +1,17 @@
+{
+  // Cloudflare Workers（静态资源模式）：站点由 site/ 构建到 site/dist，Worker 只负责托管这些静态文件。
+  // Cloudflare 控制台「创建 Worker → 连接 Git 仓库」时：
+  //   构建命令：pnpm --dir site install && pnpm --dir site build
+  //   部署命令：npx wrangler deploy
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "book-agent-harness",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    "directory": "./site/dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  "routes": [
+    { "pattern": "agent-harness.codeflow.cc", "custom_domain": true }
+  ]
+}

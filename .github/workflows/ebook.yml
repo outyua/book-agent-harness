@@ -1,0 +1,66 @@
+name: Build ebook and publish release
+
+# 网站由 Cloudflare Workers Builds 在推送时自行构建部署（见 wrangler.jsonc）。
+# 这个工作流只负责需要 Chromium 的 PDF/EPUB 构建，并把成品挂到 GitHub Release「latest」，
+# 网站首页的下载按钮指向这些附件。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "manuscript/**"
+      - "figures/**"
+      - "assets/**"
+      - "styles/**"
+      - "scripts/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/ebook.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ebook-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ebook:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install poppler (pdfinfo, used by the PDF build manifest)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+
+      - name: Install Playwright Chromium (PDF renderer)
+        run: pnpm exec playwright install --with-deps chromium-headless-shell
+
+      - name: Build PDF and EPUB
+        run: node scripts/build-book.mjs
+
+      - name: Publish to GitHub Release "latest"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: 电子书最新构建
+          body: |
+            由 GitHub Actions 从 `main` 分支自动构建（commit ${{ github.sha }}）。
+            网站：https://agent-harness.codeflow.cc
+          files: |
+            output/pdf/agent-harness-engineering.pdf
+            output/epub/agent-harness-engineering.epub
+          prerelease: false
+          make_latest: true

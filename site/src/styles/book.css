@@ -1,4 +1,4 @@
-/* 书籍网站排版：随书字体子集、中文行距、表格与公式 */
+/* 书籍网站排版：随书字体子集、中文行距与字距、表格 / 代码 / 插图 / 公式的阅读细节 */
 
 @font-face {
 	font-family: 'Noto Serif SC Book';
@@ -14,90 +14,298 @@
 	font-display: swap;
 }
 
+/* ---------- 令牌 ---------- */
+
 :root {
 	--sl-font: 'Noto Serif SC Book', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', Georgia, serif;
 	--sl-font-heading: 'Noto Sans SC Book', 'Noto Sans SC', 'PingFang SC', 'Source Han Sans SC', system-ui, sans-serif;
-	--sl-line-height: 1.9;
-	--sl-content-width: 46rem;
-	--sl-text-body: 1.05rem;
+	--sl-font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Noto Sans Mono CJK SC', monospace;
+
+	/* 正文 17px / 1.85：一行约 38 个汉字，接近纸书版心 */
+	--book-body-size: 1.0625rem;
+	--book-body-leading: 1.85;
+	--book-measure: 43rem;
+	--sl-content-width: var(--book-measure);
+	--sl-line-height: var(--book-body-leading);
+
 	--book-accent: #7a2e2b;
 	--sl-color-accent-low: #f6e9e8;
 	--sl-color-accent: #7a2e2b;
 	--sl-color-accent-high: #4d1c1a;
+
+	/* 纸感底色：比纯白暖一点，降低长时间阅读的对比刺激 */
+	--book-paper: #fcfbf8;
+	--book-ink: #1f1d1b;
+	--book-rule: #e6e1da;
+	--book-table-head: #f3efe8;
+	--book-table-zebra: #faf7f2;
+}
+
+:root[data-theme='light'],
+:root:not([data-theme='dark']) {
+	--sl-color-bg: var(--book-paper);
+	--sl-color-text: var(--book-ink);
+	--sl-color-hairline: var(--book-rule);
+	--sl-color-hairline-light: var(--book-rule);
 }
 
 :root[data-theme='dark'] {
 	--sl-color-accent-low: #3a1a19;
 	--sl-color-accent: #d38b87;
 	--sl-color-accent-high: #f1d3d1;
+	--book-rule: #333;
+	--book-table-head: #232120;
+	--book-table-zebra: #1c1b1a;
 }
+
+/* ---------- 正文 ---------- */
 
 .sl-markdown-content {
 	font-family: var(--sl-font);
-	font-size: var(--sl-text-body);
-	line-height: var(--sl-line-height);
+	font-size: var(--book-body-size);
+	line-height: var(--book-body-leading);
 	text-align: justify;
 	text-justify: inter-ideograph;
 	hanging-punctuation: first last;
+	font-kerning: normal;
+	text-spacing-trim: space-first;
+	overflow-wrap: anywhere;
 }
 
+/* 标题：黑体承担层级；上疏下密，让标题贴住它统领的段落 */
 .sl-markdown-content :is(h1, h2, h3, h4) {
 	font-family: var(--sl-font-heading);
 	letter-spacing: 0.01em;
+	text-align: start;
+	text-wrap: balance;
+	line-height: 1.35;
+}
+
+.sl-markdown-content h1 {
+	font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.25rem);
+	font-weight: 700;
 }
 
 .sl-markdown-content h2 {
-	margin-top: 2.6em;
-	padding-bottom: 0.3em;
+	font-size: 1.45rem;
+	font-weight: 700;
+	margin-top: 3.2em;
+	padding-bottom: 0.35em;
 	border-bottom: 1px solid var(--sl-color-hairline);
 }
 
 .sl-markdown-content h3 {
+	font-size: 1.15rem;
+	font-weight: 700;
+	margin-top: 2.4em;
+}
+
+.sl-markdown-content h4 {
+	font-size: 1rem;
+	font-weight: 700;
 	margin-top: 2em;
 }
 
-.sl-markdown-content p {
-	margin-top: 1.1em;
+.sl-markdown-content :is(h2, h3, h4) + :is(p, ul, ol, table, pre, figure) {
+	margin-top: 0.85em;
 }
+
+.sl-markdown-content p {
+	margin-top: 1.15em;
+}
+
+.sl-markdown-content :is(ul, ol) {
+	margin-top: 1em;
+	padding-inline-start: 1.6em;
+}
+
+.sl-markdown-content li {
+	margin-top: 0.4em;
+}
+
+.sl-markdown-content li > :is(ul, ol) {
+	margin-top: 0.3em;
+}
+
+.sl-markdown-content strong {
+	font-family: var(--sl-font-heading);
+	font-weight: 600;
+}
+
+.sl-markdown-content a {
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+	text-underline-offset: 0.22em;
+	text-decoration-thickness: 1px;
+}
+
+.sl-markdown-content a:hover {
+	text-decoration-color: currentColor;
+}
+
+.sl-markdown-content hr {
+	border: 0;
+	border-top: 1px solid var(--sl-color-hairline);
+	margin: 2.5em auto;
+	width: 6rem;
+}
+
+/* 行内代码：等宽但不喧宾夺主 */
+.sl-markdown-content code {
+	font-family: var(--sl-font-mono);
+	font-size: 0.86em;
+	padding: 0.1em 0.35em;
+	border-radius: 0.25em;
+	background: var(--sl-color-gray-6);
+}
+
+/* ---------- 引用块：书中多为原文引述或出处 ---------- */
 
 .sl-markdown-content blockquote {
 	font-family: var(--sl-font-heading);
-	font-size: 0.92em;
-	border-inline-start: 1px solid var(--sl-color-hairline);
+	font-size: 0.94em;
+	line-height: 1.75;
+	margin-top: 1.2em;
 	padding-inline-start: 1rem;
+	border-inline-start: 1px solid var(--sl-color-hairline);
 	color: var(--sl-color-gray-2);
+	text-align: start;
+}
+
+.sl-markdown-content blockquote > p {
+	margin-top: 0.5em;
+}
+
+.sl-markdown-content blockquote > p:first-child {
+	margin-top: 0;
+}
+
+/* 代码出处行：紧贴代码块下沿 */
+.sl-markdown-content .code-source {
+	margin-top: 0.5em;
+	font-family: var(--sl-font-heading);
+	font-size: 0.82rem;
+	line-height: 1.6;
+	color: var(--sl-color-gray-3);
+	text-align: start;
+}
+
+.sl-markdown-content .code-source code {
+	background: transparent;
+	padding: 0;
+	font-size: 0.95em;
+}
+
+/* ---------- 代码块 ---------- */
+
+.sl-markdown-content .expressive-code {
+	margin-top: 1.4em;
+	--ec-codeFontFml: var(--sl-font-mono);
+	--ec-codeFontSize: 0.82rem;
+	--ec-codeLineHt: 1.65;
+	--ec-brdRad: 0.4rem;
+	--ec-brdCol: var(--sl-color-hairline);
+	--ec-frm-shdCol: transparent;
+}
+
+/* ---------- 表格 ---------- */
+
+.sl-markdown-content .table-caption {
+	margin-top: 1.6em;
+	margin-bottom: 0;
+	font-family: var(--sl-font-heading);
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--sl-color-white);
+	text-align: start;
+}
+
+.sl-markdown-content .table-caption + table {
+	margin-top: 0.5em;
 }
 
 .sl-markdown-content table {
 	display: block;
 	overflow-x: auto;
+	margin-top: 1.4em;
 	font-family: var(--sl-font-heading);
-	font-size: 0.88em;
+	font-size: 0.86rem;
 	line-height: 1.6;
 	text-align: start;
+	border-collapse: collapse;
+	border-top: 1.5px solid var(--sl-color-gray-3);
+	border-bottom: 1.5px solid var(--sl-color-gray-3);
+	-webkit-overflow-scrolling: touch;
 }
 
-.sl-markdown-content th,
-.sl-markdown-content td {
+.sl-markdown-content thead th {
+	background: var(--book-table-head);
+	font-weight: 600;
+	white-space: nowrap;
+	border-bottom: 1px solid var(--sl-color-gray-4);
+}
+
+.sl-markdown-content :is(th, td) {
+	padding: 0.55em 0.8em;
 	vertical-align: top;
-	min-width: 6em;
+	border: 0;
+	min-width: 5em;
 }
 
-.sl-markdown-content code {
-	font-size: 0.86em;
+.sl-markdown-content tbody tr:nth-child(even) {
+	background: var(--book-table-zebra);
 }
 
-.sl-markdown-content img {
+.sl-markdown-content tbody tr {
+	border-top: 1px solid var(--sl-color-hairline);
+}
+
+.sl-markdown-content td code {
+	font-size: 0.9em;
+	white-space: nowrap;
+}
+
+/* ---------- 插图 ---------- */
+
+.sl-markdown-content .book-figure {
+	margin: 2em 0 0;
+}
+
+.sl-markdown-content .book-figure img {
+	display: block;
+	width: 100%;
+	height: auto;
+	padding: 0.75rem;
+	background: #fff;
+	border: 1px solid var(--sl-color-hairline);
+	border-radius: 0.4rem;
+}
+
+.sl-markdown-content .book-figure figcaption {
+	margin-top: 0.6em;
+	font-family: var(--sl-font-heading);
+	font-size: 0.86rem;
+	line-height: 1.6;
+	color: var(--sl-color-gray-2);
+	text-align: center;
+}
+
+.sl-markdown-content .book-figure + * {
+	margin-top: 1.4em;
+}
+
+.sl-markdown-content .book-figure figcaption b {
+	font-weight: 600;
+	color: var(--sl-color-white);
+}
+
+.sl-markdown-content img:not(.book-figure img) {
 	display: block;
 	max-width: 100%;
 	margin: 1.5em auto;
 }
 
-.sl-markdown-content :is(img[src$='.svg']) {
-	background: #fff;
-	padding: 0.5rem;
-	border-radius: 0.4rem;
-}
+/* ---------- 公式 ---------- */
 
 .math-display {
 	overflow-x: auto;
@@ -105,11 +313,42 @@
 	text-align: center;
 }
 
+.math-display math {
+	font-size: 1.15em;
+}
+
 .math-inline math {
 	font-size: 1.05em;
 }
 
-/* 首页 */
+/* ---------- 页面骨架：右侧目录与侧栏用黑体，字号略小 ---------- */
+
+.right-sidebar,
+.sidebar-content,
+.sidebar-pane {
+	font-family: var(--sl-font-heading);
+}
+
+.sidebar-content details > summary {
+	font-weight: 600;
+}
+
+.right-sidebar-panel h2 {
+	font-family: var(--sl-font-heading);
+}
+
+.pagination-links a {
+	font-family: var(--sl-font-heading);
+	box-shadow: none;
+	border: 1px solid var(--sl-color-hairline);
+}
+
+.pagination-links a:hover {
+	border-color: var(--sl-color-gray-3);
+}
+
+/* ---------- 首页 ---------- */
+
 .hero .hero-html {
 	display: flex;
 	justify-content: center;
@@ -121,10 +360,11 @@
 	aspect-ratio: 2 / 3;
 	object-fit: contain;
 	border-radius: 4px;
-	box-shadow: 0 18px 40px rgb(0 0 0 / 0.25);
+	box-shadow: 0 18px 40px rgb(31 29 27 / 0.22);
 }
 
 .hero .tagline {
+	font-family: var(--sl-font);
 	font-size: 1.15rem;
 	line-height: 1.8;
 }
@@ -137,7 +377,137 @@
 	color: var(--sl-color-gray-3);
 }
 
-/* 侧栏：部扉页条目加粗，章条目缩进 */
-.sidebar-content details > summary {
+.home-intro {
+	max-width: var(--book-measure);
+	margin: 3rem auto 0;
+}
+
+.home-intro p {
+	font-size: var(--book-body-size);
+	line-height: var(--book-body-leading);
+	text-align: justify;
+}
+
+.home-author {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 2.5rem;
+	align-items: start;
+	max-width: var(--book-measure);
+	margin: 3.5rem auto 0;
+	padding-top: 2rem;
+	border-top: 1px solid var(--sl-color-hairline);
+}
+
+.home-author h2 {
+	margin-top: 0 !important;
+	font-size: 1.15rem;
+	border: 0;
+	padding: 0;
+}
+
+.home-author-copy p {
 	font-family: var(--sl-font-heading);
+	font-size: 0.95rem;
+	line-height: 1.8;
+	text-align: start;
+}
+
+.home-author .home-edition {
+	font-size: 0.86rem;
+	color: var(--sl-color-gray-3);
+}
+
+.home-qr {
+	margin: 0;
+	text-align: center;
+}
+
+.home-qr img {
+	display: block;
+	width: 10rem;
+	height: 10rem;
+	margin: 0 auto;
+	padding: 0.5rem;
+	background: #fff;
+	border: 1px solid var(--sl-color-hairline);
+	border-radius: 0.5rem;
+}
+
+.home-qr figcaption {
+	margin-top: 0.6rem;
+	font-family: var(--sl-font-heading);
+	font-size: 0.82rem;
+	color: var(--sl-color-gray-3);
+}
+
+/* 首页目录 */
+.home-toc {
+	max-width: var(--book-measure);
+	margin: 3.5rem auto 0;
+	font-family: var(--sl-font-heading);
+}
+
+.home-toc h2 {
+	margin-top: 0 !important;
+	font-size: 1.15rem;
+	border: 0;
+	padding: 0;
+}
+
+.home-toc h3 {
+	font-size: 1rem;
+	margin-top: 1.6em;
+}
+
+.home-toc h3 a {
+	text-decoration: none;
+	color: var(--sl-color-white);
+}
+
+.home-toc ul {
+	list-style: none;
+	padding-inline-start: 0;
+	margin-top: 0.5em;
+}
+
+.home-toc li {
+	margin-top: 0.35em;
+	padding-inline-start: 1.2em;
+	font-size: 0.95rem;
+}
+
+.home-toc a {
+	text-decoration: none;
+}
+
+.home-toc a:hover {
+	text-decoration: underline;
+	text-underline-offset: 0.22em;
+}
+
+/* ---------- 小屏 ---------- */
+
+@media (max-width: 50rem) {
+	:root {
+		--book-body-size: 1rem;
+		--book-body-leading: 1.8;
+	}
+
+	.sl-markdown-content {
+		text-align: start;
+	}
+
+	.home-author {
+		grid-template-columns: 1fr;
+		gap: 1.5rem;
+	}
+
+	.home-qr {
+		justify-self: start;
+	}
+
+	.sl-markdown-content .book-figure img {
+		padding: 0.4rem;
+	}
 }

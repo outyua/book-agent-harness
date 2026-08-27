@@ -64,6 +64,26 @@ function renderMath(markdown, sourceName) {
   return value.replace(/BOOKCODETOKEN(\d+)ENDTOKEN/g, (_m, index) => protectedChunks[Number(index)]);
 }
 
+// 插图：`![图 N-M：说明](路径)` → <figure> + <figcaption>
+// 表格：单独成段的「表 N-M：说明」→ 表题样式
+// 代码出处：代码块后紧跟的只含反引号路径的引用块 → 出处行样式
+function addCaptions(markdown) {
+  let value = markdown.replace(
+    /^!\[(图 \d+-\d+)[：:]\s*([^\]]*)\]\(([^)]+)\)\s*$/gm,
+    (_m, num, caption, src) =>
+      `<figure class="book-figure"><img src="${src}" alt="${num}：${caption}" loading="lazy" decoding="async" /><figcaption><b>${num}</b>　${caption}</figcaption></figure>`,
+  );
+  value = value.replace(/^(表 \d+-\d+[：:][^\n|]+)$/gm, '<p class="table-caption">$1</p>');
+  value = value.replace(/^(```[\s\S]*?\n```)\n> (`[^`\n]+`(?:[^\n]*))$/gm, (_m, code, source) => {
+    const html = source
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    return `${code}\n<p class="code-source">${html}</p>`;
+  });
+  return value;
+}
+
 function firstParagraph(markdown) {
   const lines = markdown.split("\n");
   for (const line of lines) {
@@ -92,6 +112,7 @@ function prepareSection(section) {
 
   markdown = markdown.replace(/\]\((?:\.\.\/)?figures\//g, "](/figures/");
   markdown = renderMath(markdown, section.source);
+  markdown = addCaptions(markdown);
 
   return { title, description: firstParagraph(markdown), body: markdown.trim() + "\n" };
 }
@@ -132,6 +153,7 @@ function copyStaticAssets() {
   }
 
   cpSync(join(assetsDir, "cover.png"), join(publicDir, "cover.png"));
+  cpSync(join(assetsDir, "wechat-qr.png"), join(publicDir, "wechat-qr.png"));
   mkdirSync(join(siteDir, "src", "assets"), { recursive: true });
   cpSync(join(assetsDir, "cover.png"), join(siteDir, "src", "assets", "cover.png"));
 
@@ -193,22 +215,28 @@ hero:
 ${actionsYaml}
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+<section class="home-intro">
 
-<CardGrid>
-  <Card title="读什么" icon="open-book">
-    17 章按 agent 生命周期上的决策点组织：循环、工具、插话、恢复、KV cache、system prompt、压缩、记忆、检索、权限、多 agent、协议、会话运行时、云端、交付流水线、评测。
-  </Card>
-  <Card title="证据从哪来" icon="magnifier">
-    每一条结论都对照真实项目源码，给出文件与行号；闭源产品只依据公开材料，并标明证据级别。资料截止 ${publication.sourceCutoffDate}。
-  </Card>
-  <Card title="版本" icon="information">
-    ${publication.edition} · ${publication.publicationDate}；修订版 ${publication.revision} · ${publication.revisionDate}。${publication.revisionNote}
-  </Card>
-  <Card title="作者" icon="pen">
-    ${publication.author} · 公众号 ${publication.account} · ${publication.email}
-  </Card>
-</CardGrid>
+这本书回答四件事：面对同一个决策点，各家 coding agent 分别怎么做；它们为什么会做出不同甚至相反的选择；判断该抄哪一个的标准是什么；以及照着做时最小的可用实现长什么样。17 章按 agent 生命周期上的决策点组织——循环、工具、插话、恢复、KV cache、system prompt、压缩、记忆、检索、权限、多 agent、协议、会话运行时、云端、交付流水线、评测。
+
+每一条结论都对照真实项目的源码，给出文件与行号；闭源产品只依据公开材料，并标明证据级别。项目源码材料截止到 ${publication.sourceCutoffDate}；这些项目每天都在改，把书当作设计决策的比较框架，不要把任何具体版本号或常量当作永久事实。
+
+</section>
+
+<section class="home-author">
+  <div class="home-author-copy">
+    <h2>作者与联系</h2>
+    <p><strong>${publication.author}</strong>，持续研究 coding agent、执行框架与多 agent 工程。本书来自对真实项目源码的逐项对照。</p>
+    <p>勘误与讨论：<a href="mailto:${publication.email}">${publication.email}</a>；每章末尾的「反馈与勘误」会自动带上章节标题。新章节、修订说明与后续文章发在公众号 <strong>${publication.account}</strong>。</p>
+    <p class="home-edition">${publication.edition} · ${publication.publicationDate}　修订版 ${publication.revision} · ${publication.revisionDate}<br />${publication.revisionNote}</p>
+  </div>
+  <figure class="home-qr">
+    <img src="/wechat-qr.png" width="200" height="200" alt="公众号 ${publication.account} 二维码" loading="lazy" decoding="async" />
+    <figcaption>微信扫码关注公众号 ${publication.account}</figcaption>
+  </figure>
+</section>
+
+<nav class="home-toc" aria-label="目录">
 
 ## 目录
 
@@ -216,6 +244,8 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 ${partRows.join("\n")}
 
 - [${sections.at(-1).label}](/book/${sections.at(-1).id}/)
+
+</nav>
 `;
   writeFileSync(join(docsDir, "index.mdx"), content, "utf8");
 }

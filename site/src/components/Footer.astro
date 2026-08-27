@@ -1,0 +1,56 @@
+---
+// 覆盖 Starlight 默认页脚：保留上一章/下一章分页，在正文页追加「反馈与勘误」入口。
+import Default from '@astrojs/starlight/components/Footer.astro';
+import { publication } from '../../../scripts/lib/manuscript.mjs';
+
+const { entry } = Astro.locals.starlightRoute;
+const isSplash = entry.data.template === 'splash';
+const pageTitle = entry.data.title;
+const pageUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://agent-harness.codeflow.cc').href;
+const subject = encodeURIComponent(`《${publication.title}》反馈：${pageTitle}`);
+const body = encodeURIComponent(`页面：${pageUrl}\n\n（请写下你发现的问题、疑问或建议；勘误请附上原文片段。）\n`);
+const mailto = `mailto:${publication.email}?subject=${subject}&body=${body}`;
+---
+
+{
+	!isSplash && (
+		<aside class="feedback" aria-labelledby="feedback-heading">
+			<h2 id="feedback-heading">反馈与勘误</h2>
+			<p>
+				发现错误、有不同看法，或者你手上的源码已经和书里写的不一样了？
+				<a href={mailto}>写邮件给作者</a>（主题会自动带上本章标题），或在公众号 <strong>{publication.account}</strong> 后台留言。
+				被采纳的勘误会记入下一次修订。
+			</p>
+		</aside>
+	)
+}
+<Default />
+
+<style>
+	.feedback {
+		margin-top: 3.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--sl-color-hairline);
+		font-family: var(--sl-font-heading);
+	}
+	.feedback h2 {
+		margin: 0 0 0.5rem;
+		font-size: var(--sl-text-base);
+		font-weight: 600;
+		color: var(--sl-color-white);
+	}
+	.feedback p {
+		margin: 0;
+		font-size: var(--sl-text-sm);
+		line-height: 1.8;
+		color: var(--sl-color-gray-2);
+	}
+	.feedback a {
+		color: var(--sl-color-accent-high);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	.feedback a:hover {
+		color: var(--sl-color-accent);
+	}
+</style>

@@ -52,6 +52,7 @@ export default defineConfig({
 			logo: { src: './src/assets/cover.png', alt: publication.fullTitle },
 			favicon: '/favicon.svg',
 			customCss: ['./src/styles/book.css'],
+			components: { Footer: './src/components/Footer.astro' },
 			tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
 			lastUpdated: false,
 			credits: false,

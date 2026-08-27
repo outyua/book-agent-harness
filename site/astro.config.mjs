@@ -3,6 +3,22 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { publication, sections } from '../scripts/lib/manuscript.mjs';
 
+// Google Analytics（GA4）。测量 ID 从环境变量 PUBLIC_GA_MEASUREMENT_ID 读取（Cloudflare 构建时在
+// Worker → Settings → Variables and Secrets 里配置，本地可写在 site/.env），未设置则不注入统计脚本。
+const gaId = process.env.PUBLIC_GA_MEASUREMENT_ID ?? '';
+const gaHead = gaId
+	? [
+			{
+				tag: 'script',
+				attrs: { src: `https://www.googletagmanager.com/gtag/js?id=${gaId}`, async: true },
+			},
+			{
+				tag: 'script',
+				content: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '${gaId}', { anonymize_ip: true });`,
+			},
+		]
+	: [];
+
 // 侧栏结构与电子书书签树一致：序 → 六个部分（部扉页 + 各章）→ 后记
 function buildSidebar() {
 	const groups = [];
@@ -47,6 +63,7 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://agent-harness.codeflow.cc/cover.png' } },
 				{ tag: 'meta', attrs: { property: 'og:image:alt', content: `${publication.fullTitle}封面` } },
 				{ tag: 'meta', attrs: { name: 'author', content: publication.author } },
+				...gaHead,
 			],
 		}),
 	],

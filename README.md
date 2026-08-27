@@ -49,6 +49,8 @@ pnpm --dir site dev                            # 本地预览 http://localhost:4
 
 `wrangler.jsonc` 把 Worker 配成纯静态资源模式（`assets.directory = site/dist`），并声明自定义域名 `agent-harness.codeflow.cc`（`routes[].custom_domain`），首次部署时 Cloudflare 会自动在 `codeflow.cc` 区域里创建该记录；也可以在 Worker 的 Settings → Domains & Routes 里手工添加。之后每次推送 `main`，Cloudflare 自动重新构建并发布。
 
+**统计：** 网站用 Google Analytics（GA4，通过 Starlight 的 `head` 注入 gtag）。在 Worker 的 Settings → Variables and Secrets 里添加构建变量 `PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX` 后重新部署即生效；未设置时不注入脚本。Worker 的可观测性（traces 开、logs 关）配置在 `wrangler.jsonc` 的 `observability` 里。
+
 **电子书：GitHub Action → GitHub Release。** `.github/workflows/ebook.yml` 在书稿、图、素材或构建脚本变动时运行，用 Chromium 生成 PDF/EPUB，发布到 Release `latest`。网站首页的下载按钮在 Cloudflare 构建环境里没有本地成品时，自动指向 `https://github.com/outyua/book-agent-harness/releases/latest/download/…`。仓库为私有时这些链接需要登录 GitHub 才能下载；公开仓库可直接访问。
 
 ## 写作与校验

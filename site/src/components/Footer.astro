@@ -10,10 +10,32 @@ const pageUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://agent-harness
 const subject = encodeURIComponent(`《${publication.title}》反馈：${pageTitle}`);
 const body = encodeURIComponent(`页面：${pageUrl}\n\n（请写下你发现的问题、疑问或建议；勘误请附上原文片段。）\n`);
 const mailto = `mailto:${publication.email}?subject=${subject}&body=${body}`;
+
+// 每页的 Article 结构化数据：作者、所属书籍、日期，供搜索引擎按页识别署名
+const articleLd = JSON.stringify({
+	'@context': 'https://schema.org',
+	'@type': 'Article',
+	headline: pageTitle,
+	description: entry.data.description ?? '',
+	inLanguage: 'zh-CN',
+	url: pageUrl,
+	mainEntityOfPage: pageUrl,
+	author: { '@type': 'Person', name: publication.author, email: publication.email, url: 'https://agent-harness.codeflow.cc/' },
+	publisher: { '@type': 'Person', name: publication.author },
+	datePublished: publication.publicationDate,
+	dateModified: publication.revisionDate,
+	isPartOf: { '@type': 'Book', name: publication.fullTitle, url: 'https://agent-harness.codeflow.cc/' },
+	image: 'https://agent-harness.codeflow.cc/cover.png',
+});
 ---
 
 {
 	!isSplash && (
+		<>
+		<script type="application/ld+json" set:html={articleLd} />
+		<p class="byline">
+			本页出自《{publication.fullTitle}》 · 作者 <a href="/" rel="author">{publication.author}</a> · 修订版 {publication.revision}（{publication.revisionDate}）
+		</p>
 		<aside class="feedback" aria-labelledby="feedback-heading">
 			<h2 id="feedback-heading">反馈与勘误</h2>
 			<p>
@@ -22,11 +44,29 @@ const mailto = `mailto:${publication.email}?subject=${subject}&body=${body}`;
 				被采纳的勘误会记入下一次修订。
 			</p>
 		</aside>
+		</>
 	)
 }
 <Default />
 
 <style>
+	.byline {
+		margin-top: 3.5rem;
+		font-family: var(--sl-font-heading);
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+	.byline a {
+		color: var(--sl-color-gray-2);
+		text-decoration: none;
+		font-weight: 600;
+	}
+	.byline a:hover {
+		text-decoration: underline;
+	}
+	.byline + .feedback {
+		margin-top: 1.25rem;
+	}
 	.feedback {
 		margin-top: 3.5rem;
 		padding-top: 1.5rem;

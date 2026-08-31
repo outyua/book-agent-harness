@@ -1,2 +1,5 @@
 /sitemap-index.xml /sitemap.xml 301
 /sitemap-0.xml /sitemap.xml 301
+# 百度站长文件验证要求 /xxx.html 直接 200。Workers 的 html_handling 会把 .html 请求 307 到无后缀地址，
+# 所以文件存成 .txt，用 200 重写把 .html 路径映射过去（_redirects 先于 html_handling 求值）。
+/baidu_verify_codeva-s4YKR4npRD.html /baidu_verify_codeva-s4YKR4npRD.txt 200

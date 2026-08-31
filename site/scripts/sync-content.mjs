@@ -187,7 +187,7 @@ function writeSectionPages() {
       .join("\n") + "\n\n";
     writeFileSync(join(bookDocsDir, `${section.id}.md`), frontmatter + page.body, "utf8");
   });
-  llmsIndex.push("", "## 其他", "", `- [PDF / EPUB 下载与作者信息](${SITE}/)`, `- [站点地图](${SITE}/sitemap-index.xml)`);
+  llmsIndex.push("", "## 其他", "", `- [PDF / EPUB 下载与作者信息](${SITE}/)`, `- [站点地图](${SITE}/sitemap.xml)`);
   writeFileSync(join(publicDir, "llms.txt"), llmsIndex.join("\n") + "\n", "utf8");
   writeFileSync(join(publicDir, "llms-full.txt"), llmsFull.join("\n") + `\n\n---\n\n全书作者 ${publication.author}，${SITE}/\n`, "utf8");
 }

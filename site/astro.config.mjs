@@ -1,7 +1,32 @@
 // @ts-check
+import { readdir, rename, unlink } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { publication, sections } from '../scripts/lib/manuscript.mjs';
+
+/** Astro sitemap always writes sitemap-index.xml + sitemap-0.xml. Flatten to /sitemap.xml. */
+function flattenSitemap() {
+	return {
+		name: 'flatten-sitemap',
+		hooks: {
+			'astro:build:done': async ({ dir, logger }) => {
+				const outDir = fileURLToPath(dir);
+				const files = await readdir(outDir);
+				const chunks = files.filter((name) => /^sitemap-\d+\.xml$/.test(name)).sort();
+				if (chunks.length !== 1 || chunks[0] !== 'sitemap-0.xml') {
+					throw new Error(
+						`flatten-sitemap: expected a single sitemap-0.xml, found ${chunks.join(', ') || '(none)'}`,
+					);
+				}
+				await rename(join(outDir, 'sitemap-0.xml'), join(outDir, 'sitemap.xml'));
+				await unlink(join(outDir, 'sitemap-index.xml'));
+				logger.info('flattened sitemap-0.xml → sitemap.xml');
+			},
+		},
+	};
+}
 
 // Google Analytics（GA4）。测量 ID 从环境变量 PUBLIC_GA_MEASUREMENT_ID 读取（Cloudflare 构建时在
 // Worker → Settings → Variables and Secrets 里配置，本地可写在 site/.env），未设置时用默认的 G-G6XTK77696。
@@ -22,6 +47,7 @@ const gaHead = gaId
 // Google Search Console 的 HTML 标记验证：设置环境变量 PUBLIC_GOOGLE_SITE_VERIFICATION 即注入（也可改用 DNS 验证，见 README）
 const googleVerification = process.env.PUBLIC_GOOGLE_SITE_VERIFICATION ?? '';
 const seoHead = [
+	{ tag: 'link', attrs: { rel: 'sitemap', href: '/sitemap.xml' } },
 	{ tag: 'meta', attrs: { property: 'og:image:width', content: '1600' } },
 	{ tag: 'meta', attrs: { property: 'og:image:height', content: '2400' } },
 	{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
@@ -103,5 +129,7 @@ export default defineConfig({
 				...gaHead,
 			],
 		}),
+		// Must run after Starlight so its injected @astrojs/sitemap writes files first.
+		flattenSitemap(),
 	],
 });

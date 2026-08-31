@@ -37,4 +37,4 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Sitemap: https://agent-harness.codeflow.cc/sitemap-index.xml
+Sitemap: https://agent-harness.codeflow.cc/sitemap.xml

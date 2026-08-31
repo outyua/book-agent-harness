@@ -33,7 +33,7 @@ function gitDate(relativePath) {
 }
 
 function buildLastmod() {
-	const fallback = `${publication.revisionDate}T00:00:00+08:00`;
+	const fallback = `${publication.revisionDate}T12:00:00+08:00`; // 取中午，换算成 UTC 仍是同一天
 	/** @type {Map<string, string>} */
 	const map = new Map();
 	let newest = fallback;
@@ -90,7 +90,8 @@ const gaHead = gaId
 const verificationMeta = [
 	['google-site-verification', process.env.PUBLIC_GOOGLE_SITE_VERIFICATION],
 	['msvalidate.01', process.env.PUBLIC_BING_SITE_VERIFICATION],
-	['baidu-site-verification', process.env.PUBLIC_BAIDU_SITE_VERIFICATION],
+	// 百度站长平台的 HTML 标签验证码（2026-08-31 申请）；根目录同时放了文件验证 baidu_verify_codeva-s4YKR4npRD.html
+	['baidu-site-verification', process.env.PUBLIC_BAIDU_SITE_VERIFICATION ?? 'codeva-s4YKR4npRD'],
 ]
 	.filter(([, value]) => value)
 	.map(([name, content]) => ({ tag: 'meta', attrs: { name, content } }));

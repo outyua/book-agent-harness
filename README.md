@@ -51,7 +51,9 @@ pnpm --dir site dev                            # 本地预览 http://localhost:4
 
 **统计：** 网站用 Google Analytics（GA4，通过 Starlight 的 `head` 注入 gtag）。在 Worker 的 Settings → Variables and Secrets 里可用构建变量 `PUBLIC_GA_MEASUREMENT_ID` 覆盖测量 ID；默认为 `G-G6XTK77696`。Worker 的可观测性（traces 开、logs 关）配置在 `wrangler.jsonc` 的 `observability` 里。
 
-**SEO 与站长工具：** 站点自动生成单一 `sitemap.xml`（Astro sitemap 压成一份 urlset，`site` 已设为 agent-harness.codeflow.cc），`public/robots.txt` 指向它；每页有 `<title>`、description、canonical、Open Graph / Twitter 卡片、`lang="zh-CN"`，全站注入 schema.org `Book` 结构化数据。提交 Google Search Console：添加资源「网址前缀 https://agent-harness.codeflow.cc」，验证方式二选一——① HTML 标记：把给出的 `content` 值设为 Worker 构建变量 `PUBLIC_GOOGLE_SITE_VERIFICATION` 后重新部署；② DNS：在 Cloudflare 的 codeflow.cc 区域加 TXT 记录。验证后在「站点地图」里提交 `sitemap.xml`。
+**SEO 与站长工具：** 站点生成单一 `sitemap.xml`（每条 URL 带 `lastmod`，取书稿文件的 git 提交时间；`sitemap-index.xml`、`sitemap-0.xml` 301 到它），`public/robots.txt` 指向它。每页有 `<title>`（首页不重复书名）、按页描述（章节页取本章前三个二级标题）、canonical、Open Graph / Twitter 卡片（横版 `og.jpg` 1200×630，由 `pnpm --dir site og` 在本机生成后提交，改书名/作者/封面后重跑）、`lang="zh-CN"`。结构化数据：首页 `WebSite` + `Book`（含各章 `hasPart`），章节页 `Chapter`/`TechArticle`（`isPartOf` 指向本书）+ `BreadcrumbList`，都在 `site/src/starlightRouteData.ts` 里按页写进 `<head>`。`.md` 纯文本版与 `llms*.txt` 通过 `_headers` 加 `X-Robots-Tag: noindex`，只给 AI 爬虫用，不和网页版争排名；`_headers` 同时下发 HSTS、`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy` 与静态资源的长期缓存。
+
+站长工具验证：把各家给的 HTML 标记值设为 Worker 构建变量后重新部署——Google `PUBLIC_GOOGLE_SITE_VERIFICATION`、Bing `PUBLIC_BING_SITE_VERIFICATION`、百度 `PUBLIC_BAIDU_SITE_VERIFICATION`；或在 Cloudflare 的 codeflow.cc 区域加 DNS TXT 记录。验证后提交 `https://agent-harness.codeflow.cc/sitemap.xml`。另外两项只能在 Cloudflare 控制台做：SSL/TLS → Edge Certificates 打开 **Always Use HTTPS**（现在 `http://` 直接 200，不跳转）；Security → Bots 确认没有拦搜索引擎与 AI 爬虫。
 
 **电子书：GitHub Action → GitHub Release。** `.github/workflows/ebook.yml` 在书稿、图、素材或构建脚本变动时运行，用 Chromium 生成 PDF/EPUB，发布到 Release `latest`。网站首页的下载按钮在 Cloudflare 构建环境里没有本地成品时，自动指向 `https://github.com/outyua/book-agent-harness/releases/latest/download/…`。仓库为私有时这些链接需要登录 GitHub 才能下载；公开仓库可直接访问。
 

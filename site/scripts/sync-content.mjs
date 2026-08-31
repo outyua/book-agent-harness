@@ -13,6 +13,7 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 import temml from "temml";
 import { publication, sections, removeChapterReview, prepareBackMatter } from "../../scripts/lib/manuscript.mjs";
 
@@ -96,6 +97,21 @@ function firstParagraph(markdown) {
   return publication.subtitle;
 }
 
+// 章节页的搜索摘要：取本章前三个二级标题（x.1–x.3 是各章特有的内容，x.4 起是固定栏目），
+// 标题里本来就有读者会搜的词（KV cache、前缀匹配、状态机……），也不会写出正文没有的话。
+const fixedHeadings = /^(反面证据|可以直接采用|版本与复核)/;
+function chapterDescription(markdown) {
+  const headings = [];
+  for (const m of markdown.matchAll(/^## \d+\.\d+ (.+)$/gm)) {
+    const text = m[1].trim().replace(/[*`_]/g, "");
+    if (fixedHeadings.test(text)) continue;
+    headings.push(text);
+    if (headings.length === 3) break;
+  }
+  if (headings.length === 0) return null;
+  return `本章内容：${headings.join("；")}。附反面证据、失败模式与可直接采用的最小实现，全部对照真实 coding agent 源码。`;
+}
+
 function yamlString(value) {
   return JSON.stringify(value);
 }
@@ -115,7 +131,8 @@ function prepareSection(section) {
   markdown = renderMath(markdown, section.source);
   markdown = addCaptions(markdown);
 
-  return { title, description: firstParagraph(markdown), body: markdown.trim() + "\n" };
+  const description = (section.type === "chapter" && chapterDescription(markdown)) || firstParagraph(markdown);
+  return { title, description, body: markdown.trim() + "\n" };
 }
 
 const SITE = "https://agent-harness.codeflow.cc";
@@ -192,6 +209,16 @@ function writeSectionPages() {
   writeFileSync(join(publicDir, "llms-full.txt"), llmsFull.join("\n") + `\n\n---\n\n全书作者 ${publication.author}，${SITE}/\n`, "utf8");
 }
 
+// 封面只有 1600×2400 一张原图（1.5 MB）。页头 logo 与首页首屏各自缩一份：
+//   src/assets/logo.png    128×192，页头显示高约 40px，够 3x 屏
+//   public/cover-hero.webp 720×1080，首页封面 CSS 宽 22rem（352px），够 2x 屏
+async function deriveCoverImages() {
+  const cover = join(assetsDir, "cover.png");
+  mkdirSync(join(siteDir, "src", "assets"), { recursive: true });
+  await sharp(cover).resize(128, 192).png({ compressionLevel: 9 }).toFile(join(siteDir, "src", "assets", "logo.png"));
+  await sharp(cover).resize(720, 1080).webp({ quality: 82 }).toFile(join(publicDir, "cover-hero.webp"));
+}
+
 function copyStaticAssets() {
   const figuresOut = join(publicDir, "figures");
   rmSync(figuresOut, { recursive: true, force: true });
@@ -207,9 +234,8 @@ function copyStaticAssets() {
   }
 
   cpSync(join(assetsDir, "cover.png"), join(publicDir, "cover.png"));
+  cpSync(join(assetsDir, "og.jpg"), join(publicDir, "og.jpg"));
   cpSync(join(assetsDir, "wechat-qr.png"), join(publicDir, "wechat-qr.png"));
-  mkdirSync(join(siteDir, "src", "assets"), { recursive: true });
-  cpSync(join(assetsDir, "cover.png"), join(siteDir, "src", "assets", "cover.png"));
 
   const downloadsOut = join(publicDir, "downloads");
   mkdirSync(downloadsOut, { recursive: true });
@@ -228,6 +254,9 @@ function copyStaticAssets() {
   }
   return available;
 }
+
+const homeDescription =
+  "同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。17 章逐项对照源码：agent loop 状态机、工具接口与并行、KV cache、system prompt、上下文压缩与记忆、代码检索、权限与沙箱、多 agent、MCP/A2A/AG-UI、session runtime、云端多租户、交付流水线与评测。作者王吕。";
 
 function writeIndexPage(available) {
   const partRows = [];
@@ -256,15 +285,17 @@ function writeIndexPage(available) {
     )
     .join("\n");
 
+  // 首页 <title> 与搜索摘要：标题只出现一次书名并点明「23 个 coding agent 源码对照」；
+  // 描述把读者会搜的词写进去（agent loop、工具、KV cache、system prompt、权限、多 agent、MCP）。
   const content = `---
-title: ${yamlString(publication.fullTitle)}
-description: ${yamlString("同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。")}
+title: ${yamlString(`${publication.title}：从源码对照 23 个 coding agent 的设计决策`)}
+description: ${yamlString(homeDescription)}
 template: splash
 hero:
   title: ${yamlString(publication.title)}
   tagline: ${yamlString(`${publication.subtitle}<br />同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。<br /><span class="hero-author">作者 ${publication.author}</span><span class="hero-meta">公众号 ${publication.account} · ${publication.email} · 修订版 ${publication.revision}（${publication.revisionDate}）</span>`)}
   image:
-    html: ${yamlString(`<img class="book-cover" src="/cover.png" width="600" height="900" alt="${publication.fullTitle}封面" loading="eager" decoding="async" />`)}
+    html: ${yamlString(`<img class="book-cover" src="/cover-hero.webp" width="720" height="1080" alt="${publication.fullTitle}封面" loading="eager" fetchpriority="high" decoding="async" />`)}
   actions:
 ${actionsYaml}
 ---
@@ -306,6 +337,7 @@ ${partRows.join("\n")}
 
 writeSectionPages();
 const available = copyStaticAssets();
+await deriveCoverImages();
 writeIndexPage(available);
 console.log(
   `同步完成：${sections.length} 个页面，下载链接：${Object.values(available).join(" ")}`,

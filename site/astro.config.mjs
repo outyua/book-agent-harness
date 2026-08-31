@@ -1,10 +1,47 @@
-// @ts-check
+import { execFileSync } from 'node:child_process';
 import { readdir, rename, unlink } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import sitemap from '@astrojs/sitemap';
 import { publication, sections } from '../scripts/lib/manuscript.mjs';
+
+const SITE = 'https://agent-harness.codeflow.cc';
+const bookRoot = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
+
+/**
+ * 每个页面的最后修改时间，写进 sitemap 的 <lastmod>。
+ * 取书稿文件在 git 里的最近提交时间；拿不到（浅克隆、没有 git）就退回修订日期。
+ */
+function gitDate(relativePath) {
+	try {
+		const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', relativePath], {
+			cwd: bookRoot,
+			encoding: 'utf8',
+			stdio: ['ignore', 'pipe', 'ignore'],
+		}).trim();
+		return out || null;
+	} catch {
+		return null;
+	}
+}
+
+function buildLastmod() {
+	const fallback = `${publication.revisionDate}T00:00:00+08:00`;
+	/** @type {Map<string, string>} */
+	const map = new Map();
+	let newest = fallback;
+	for (const section of sections) {
+		const date = gitDate(`manuscript/${section.source}`) ?? fallback;
+		map.set(`/book/${section.id}/`, date);
+		if (date > newest) newest = date;
+	}
+	map.set('/', newest);
+	return map;
+}
+
+const lastmod = buildLastmod();
 
 /** Astro sitemap always writes sitemap-index.xml + sitemap-0.xml. Flatten to /sitemap.xml. */
 function flattenSitemap() {
@@ -44,38 +81,32 @@ const gaHead = gaId
 		]
 	: [];
 
-// Google Search Console 的 HTML 标记验证：设置环境变量 PUBLIC_GOOGLE_SITE_VERIFICATION 即注入（也可改用 DNS 验证，见 README）
-const googleVerification = process.env.PUBLIC_GOOGLE_SITE_VERIFICATION ?? '';
+// 站长工具的 HTML 标记验证：设置对应环境变量即注入（也可改用 DNS 验证，见 README）。
+const verificationMeta = [
+	['google-site-verification', process.env.PUBLIC_GOOGLE_SITE_VERIFICATION],
+	['msvalidate.01', process.env.PUBLIC_BING_SITE_VERIFICATION],
+	['baidu-site-verification', process.env.PUBLIC_BAIDU_SITE_VERIFICATION],
+]
+	.filter(([, value]) => value)
+	.map(([name, content]) => ({ tag: 'meta', attrs: { name, content } }));
+
+// 全站相同的社交卡片：横版 1200×630（由 scripts/make-og.mjs 生成，随仓库提交）。
+// 竖版封面 cover.png 只用在首页正文和 Book 结构化数据里，不再当预览图，避免被裁掉文字。
+// 按页不同的标签（title 去重、twitter:title、章节 JSON-LD、面包屑、markdown alternate）在 src/starlightRouteData.ts。
 const seoHead = [
 	{ tag: 'link', attrs: { rel: 'sitemap', href: '/sitemap.xml' } },
-	{ tag: 'meta', attrs: { property: 'og:image:width', content: '1600' } },
-	{ tag: 'meta', attrs: { property: 'og:image:height', content: '2400' } },
+	{ tag: 'meta', attrs: { property: 'og:image', content: `${SITE}/og.jpg` } },
+	{ tag: 'meta', attrs: { property: 'og:image:type', content: 'image/jpeg' } },
+	{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+	{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+	{ tag: 'meta', attrs: { property: 'og:image:alt', content: `${publication.fullTitle}，作者 ${publication.author}` } },
 	{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
-	{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://agent-harness.codeflow.cc/cover.png' } },
-	{ tag: 'meta', attrs: { name: 'keywords', content: 'Agent Harness, coding agent, AI agent, agent loop, KV cache, system prompt, context engineering, MCP, Claude Code, opencode, codex' } },
-	{
-		tag: 'script',
-		attrs: { type: 'application/ld+json' },
-		content: JSON.stringify({
-			'@context': 'https://schema.org',
-			'@type': 'Book',
-			name: publication.fullTitle,
-			alternateName: publication.title,
-			author: { '@type': 'Person', name: publication.author, email: publication.email },
-			inLanguage: 'zh-CN',
-			bookFormat: 'https://schema.org/EBook',
-			datePublished: publication.publicationDate,
-			dateModified: publication.revisionDate,
-			version: publication.revision,
-			image: 'https://agent-harness.codeflow.cc/cover.png',
-			url: 'https://agent-harness.codeflow.cc/',
-			description: '同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。',
-		}),
-	},
-	...(googleVerification ? [{ tag: 'meta', attrs: { name: 'google-site-verification', content: googleVerification } }] : []),
+	{ tag: 'meta', attrs: { name: 'twitter:image', content: `${SITE}/og.jpg` } },
+	{ tag: 'meta', attrs: { name: 'twitter:image:alt', content: `${publication.fullTitle}，作者 ${publication.author}` } },
+	{ tag: 'meta', attrs: { name: 'author', content: publication.author } },
+	...verificationMeta,
 ];
 
-// 侧栏结构与电子书书签树一致：序 → 六个部分（部扉页 + 各章）→ 后记
 // 侧栏结构与电子书书签树一致：序 → 六个部分（导读 + 各章）→ 后记。
 // 侧栏用短标签：部分作为分组名，部扉页显示为「导读」，章只保留章号与标题；其他部分默认折叠。
 function sidebarLabel(section) {
@@ -103,7 +134,7 @@ function buildSidebar() {
 }
 
 export default defineConfig({
-	site: 'https://agent-harness.codeflow.cc',
+	site: SITE,
 	trailingSlash: 'always',
 	integrations: [
 		starlight({
@@ -113,23 +144,28 @@ export default defineConfig({
 			locales: {
 				root: { label: '简体中文', lang: 'zh-CN' },
 			},
-			logo: { src: './src/assets/cover.png', alt: publication.fullTitle },
+			// 页头 logo 用 sync-content.mjs 生成的小图（128×192），不再把 1600×2400 的封面塞进每个页面。
+			logo: { src: './src/assets/logo.png', alt: publication.fullTitle },
 			favicon: '/favicon.svg',
 			customCss: ['./src/styles/book.css'],
 			components: { Footer: './src/components/Footer.astro' },
+			routeMiddleware: './src/starlightRouteData.ts',
 			tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
 			lastUpdated: false,
 			credits: false,
 			sidebar: buildSidebar(),
-			head: [
-				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://agent-harness.codeflow.cc/cover.png' } },
-				{ tag: 'meta', attrs: { property: 'og:image:alt', content: `${publication.fullTitle}封面` } },
-				{ tag: 'meta', attrs: { name: 'author', content: publication.author } },
-				...seoHead,
-				...gaHead,
-			],
+			head: /** @type {any} */ ([...seoHead, ...gaHead]),
 		}),
-		// Must run after Starlight so its injected @astrojs/sitemap writes files first.
+		// 显式配置 sitemap（Starlight 发现已有同名集成就不再自动注入），给每条 URL 加 lastmod。
+		sitemap({
+			serialize(item) {
+				const path = new URL(item.url).pathname;
+				const date = lastmod.get(path);
+				if (date) item.lastmod = date;
+				return item;
+			},
+		}),
+		// Must run after the sitemap integration so its files exist first.
 		flattenSitemap(),
 	],
 });

@@ -1,9 +1,49 @@
-# Cloudflare 静态资源响应头：文本类文件显式声明 UTF-8，否则浏览器可能按本地编码猜测
+# Cloudflare 静态资源响应头。规则按路径累加：同一个响应头不要在两条都能命中的规则里各写一次，
+# 否则会被拼成「a, b」（之前 /*.md 与 /book/*.md 都写 Content-Type，线上就出现过重复）。
+
+# 全站安全头。http → https 的跳转在 Cloudflare 控制台开（SSL/TLS → Edge Certificates → Always Use HTTPS）。
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# 带内容哈希的构建产物与字体：长期缓存
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 不带哈希但很少变的图片：缓存一周，过期后先用旧的再后台更新
+/figures/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/cover.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/cover-hero.webp
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/og.jpg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/wechat-qr.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/favicon.svg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/downloads/*
+  Cache-Control: public, max-age=3600
+
+# 文本类文件显式声明 UTF-8，否则浏览器可能按本地编码猜测
 /*.txt
   Content-Type: text/plain; charset=utf-8
 /*.md
   Content-Type: text/markdown; charset=utf-8
-/book/*.md
-  Content-Type: text/markdown; charset=utf-8
 /*.xml
   Content-Type: application/xml; charset=utf-8
+
+# 给 AI 爬虫准备的纯文本版与 HTML 正文内容相同：不进搜索索引，避免与网页版互相争排名。
+# 网页版 <head> 里有 rel="alternate" type="text/markdown" 指向它们；AI 爬虫按 robots.txt 与 llms.txt 仍能抓到。
+/book/*.md
+  X-Robots-Tag: noindex
+/llms.txt
+  X-Robots-Tag: noindex
+/llms-full.txt
+  X-Robots-Tag: noindex

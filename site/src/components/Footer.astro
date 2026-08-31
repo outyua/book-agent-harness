@@ -1,5 +1,6 @@
 ---
-// 覆盖 Starlight 默认页脚：保留上一章/下一章分页，在正文页追加「反馈与勘误」入口。
+// 覆盖 Starlight 默认页脚：保留上一章/下一章分页，在正文页追加署名与「反馈与勘误」入口。
+// 按页的结构化数据与 <link rel="alternate"> 在 src/starlightRouteData.ts 里写进 <head>。
 import Default from '@astrojs/starlight/components/Footer.astro';
 import { publication } from '../../../scripts/lib/manuscript.mjs';
 
@@ -11,30 +12,11 @@ const markdownUrl = pageUrl.replace(/\/$/, '.md');
 const subject = encodeURIComponent(`《${publication.title}》反馈：${pageTitle}`);
 const body = encodeURIComponent(`页面：${pageUrl}\n\n（请写下你发现的问题、疑问或建议；勘误请附上原文片段。）\n`);
 const mailto = `mailto:${publication.email}?subject=${subject}&body=${body}`;
-
-// 每页的 Article 结构化数据：作者、所属书籍、日期，供搜索引擎按页识别署名
-const articleLd = JSON.stringify({
-	'@context': 'https://schema.org',
-	'@type': 'Article',
-	headline: pageTitle,
-	description: entry.data.description ?? '',
-	inLanguage: 'zh-CN',
-	url: pageUrl,
-	mainEntityOfPage: pageUrl,
-	author: { '@type': 'Person', name: publication.author, email: publication.email, url: 'https://agent-harness.codeflow.cc/' },
-	publisher: { '@type': 'Person', name: publication.author },
-	datePublished: publication.publicationDate,
-	dateModified: publication.revisionDate,
-	isPartOf: { '@type': 'Book', name: publication.fullTitle, url: 'https://agent-harness.codeflow.cc/' },
-	image: 'https://agent-harness.codeflow.cc/cover.png',
-});
 ---
 
 {
 	!isSplash && (
 		<>
-		<script type="application/ld+json" set:html={articleLd} />
-		<link rel="alternate" type="text/markdown" href={markdownUrl} title="Markdown 版" />
 		<p class="byline">
 			本页出自《{publication.fullTitle}》 · 作者 <a href="/" rel="author">{publication.author}</a> · 修订版 {publication.revision}（{publication.revisionDate}） · <a href={markdownUrl} type="text/markdown">Markdown 版</a>
 		</p>

@@ -1,5 +1,9 @@
 packages:
   - .
+# pnpm 9/10 读 onlyBuiltDependencies，pnpm 11 改读 allowBuilds；两种都写，本机与 Cloudflare 构建机版本不同也能装。
 onlyBuiltDependencies:
   - esbuild
   - sharp
+allowBuilds:
+  esbuild: true
+  sharp: true

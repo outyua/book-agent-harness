@@ -10,19 +10,24 @@ import { publication, sections } from '../scripts/lib/manuscript.mjs';
 const SITE = 'https://agent-harness.codeflow.cc';
 const bookRoot = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 
+function git(args) {
+	return execFileSync('git', args, { cwd: bookRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+}
+
 /**
  * 每个页面的最后修改时间，写进 sitemap 的 <lastmod>。
- * 取书稿文件在 git 里的最近提交时间；拿不到（浅克隆、没有 git）就退回修订日期。
+ * 取书稿文件在 git 里的最近提交时间。Cloudflare 构建机是浅克隆（只有 HEAD 一个提交），
+ * 这时 `git log -1 -- 文件` 会把每个文件都报成 HEAD 的时间，等于全站都「今天改过」，
+ * 所以浅克隆或没有 git 时一律退回修订日期。
  */
+let gitUsable = null;
 function gitDate(relativePath) {
 	try {
-		const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', relativePath], {
-			cwd: bookRoot,
-			encoding: 'utf8',
-			stdio: ['ignore', 'pipe', 'ignore'],
-		}).trim();
-		return out || null;
+		if (gitUsable === null) gitUsable = git(['rev-parse', '--is-shallow-repository']) === 'false';
+		if (!gitUsable) return null;
+		return git(['log', '-1', '--format=%cI', '--', relativePath]) || null;
 	} catch {
+		gitUsable = false;
 		return null;
 	}
 }

@@ -1,0 +1,68 @@
+This repository contains two kinds of material under two different licenses.
+
+1. BOOK CONTENT — Creative Commons Attribution-NonCommercial-NoDerivatives 4.0
+   Applies to: manuscript/ (all chapters, parts, preface and back matter),
+   figures/ (DOT sources and SVG exports), assets/cover.png,
+   assets/sheep-engraving.png, assets/og.jpg, and the generated PDF/EPUB in
+   site/public/downloads/.
+
+2. CODE — MIT License
+   Applies to: scripts/, site/ (except the generated content and downloads
+   derived from the manuscript), styles/, verify-citations.sh, wrangler.jsonc,
+   package.json / pnpm configuration, and .github/.
+
+Fonts in assets/fonts/ (Noto Serif SC, Noto Sans SC) are distributed under the
+SIL Open Font License 1.1; see the OFL-*.txt files in that directory.
+
+Copyright (c) 2026 王吕 (Wang Lv) <wanglv93@gmail.com>
+
+--------------------------------------------------------------------------------
+
+1. BOOK CONTENT: CC BY-NC-ND 4.0
+
+《Agent Harness 工程：从源码里读出的设计决策》 © 2026 by 王吕 is licensed under
+Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International.
+
+You are free to:
+  Share — copy and redistribute the material in any medium or format.
+
+Under the following terms:
+  Attribution   — You must give appropriate credit ("作者 王吕",
+                  https://agent-harness.codeflow.cc), provide a link to the
+                  license, and indicate if changes were made.
+  NonCommercial — You may not use the material for commercial purposes.
+  NoDerivatives — If you remix, transform, or build upon the material, you may
+                  not distribute the modified material.
+  No additional restrictions — You may not apply legal terms or technological
+                  measures that legally restrict others from doing anything the
+                  license permits.
+
+Quoting excerpts for commentary, review, teaching or research is fair use / 合理
+使用 and is not restricted by this license.
+
+Full legal text: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
+中文译本:        https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.zh-hans
+
+--------------------------------------------------------------------------------
+
+2. CODE: MIT License
+
+Copyright (c) 2026 王吕 (Wang Lv)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

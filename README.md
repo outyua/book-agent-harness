@@ -48,7 +48,6 @@
 | `wrangler.jsonc` | Cloudflare Workers 配置（静态资源模式、自定义域名） |
 | `.github/workflows/ebook.yml` | 电子书 CI：书稿变动时用 Chromium 生成 PDF / EPUB，提交回 `site/public/downloads/` |
 | `editorial-standards.md`、`citation-and-voice-scheme.md`、`publication-typesetting-standard-review.md`、`topic-selection.md`、`design-direction.md` | 写作与出版过程的决策记录：主编手册、引用体例、排版标准、选题、视觉方向 |
-| `manuscript/.review/` | 逐章审稿报告与作者回应，保留作为写作过程的记录 |
 | `verify-citations.sh` | 引用校验脚本。它按 `file:line` 到被引项目的源码里逐条核对，需要作者本机的研究仓库（`projects/` 下 28 个被引项目的克隆），公开仓库里不能直接运行 |
 
 ## 本地构建
@@ -93,6 +92,11 @@ pnpm --dir site dev        # 本地预览 http://localhost:4321
 
 被采纳的勘误会记入下一次修订，修订记录见 `manuscript/STATUS.md`。
 
-## 版权
+## 许可
 
-书稿与插图版权归作者所有，引用或转述请注明作者与出处。构建脚本与网站代码的开源许可另见 `LICENSE`（待补）。随书字体 Noto Serif SC / Noto Sans SC 按 SIL Open Font License 1.1 分发，授权文本在 `assets/fonts/`。
+两部分分开授权，详见 [`LICENSE`](LICENSE)：
+
+- **书稿与插图**（`manuscript/`、`figures/`、封面与版画）：[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.zh-hans)。可以自由转载与分享，须署名「王吕」并注明出处 <https://agent-harness.codeflow.cc>；不得用于商业目的，不得修改后再分发。引用片段用于评论、教学属于合理使用，不受此限。
+- **代码**（`scripts/`、`site/`、`styles/`、`verify-citations.sh`、`wrangler.jsonc`、CI 配置）：[MIT](LICENSE)。
+
+随书字体 Noto Serif SC / Noto Sans SC 按 SIL Open Font License 1.1 分发，授权文本在 `assets/fonts/`。

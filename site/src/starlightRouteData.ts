@@ -70,7 +70,7 @@ function homeGraph() {
 					'同一个工程问题，23 个真实 coding agent 分别怎么做、为什么分歧、判断标准是什么、抄哪个。17 章覆盖 agent loop、工具、KV cache、system prompt、压缩、记忆、检索、权限、多 agent、MCP/A2A/AG-UI、session runtime、云端多租户、交付流水线与评测。',
 				hasPart: sections
 					.filter((s) => s.type === 'chapter')
-					.map((s) => ({ '@type': 'Chapter', name: s.label, url: `${SITE}/book/${s.id}/` })),
+					.map((s) => ({ '@type': 'Chapter', name: s.label, url: `${SITE}/book/${s.id}` })),
 			},
 		],
 	};
@@ -79,7 +79,7 @@ function homeGraph() {
 function pageGraph(section: Section | undefined, pageUrl: string, title: string, description: string, markdownUrl: string) {
 	const crumbs: { name: string; item: string }[] = [{ name: publication.title, item: `${SITE}/` }];
 	const part = section ? parentPart.get(section.id) : undefined;
-	if (part) crumbs.push({ name: part.label, item: `${SITE}/book/${part.id}/` });
+	if (part) crumbs.push({ name: part.label, item: `${SITE}/book/${part.id}` });
 	crumbs.push({ name: section?.label ?? title, item: pageUrl });
 
 	return {
@@ -139,7 +139,7 @@ export const onRequest = defineRouteMiddleware((context) => {
 
 	const id = context.url.pathname.match(/^\/book\/([^/]+)\/?$/)?.[1];
 	const section = sections.find((s) => s.id === id);
-	const markdownUrl = pageUrl.replace(/\/$/, '.md');
+	const markdownUrl = `${pageUrl.replace(/\/$/, '')}.md`;
 	head.push(
 		{ tag: 'link', attrs: { rel: 'alternate', type: 'text/markdown', href: markdownUrl, title: 'Markdown 版' } },
 		jsonLd(pageGraph(section, pageUrl, data.title, description, markdownUrl)),

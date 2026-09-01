@@ -51,16 +51,20 @@ jobs:
       - name: Build PDF and EPUB
         run: node scripts/build-book.mjs
 
-      - name: Publish to GitHub Release "latest"
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest
-          name: 电子书最新构建
-          body: |
-            由 GitHub Actions 从 `main` 分支自动构建（commit ${{ github.sha }}）。
-            网站：https://agent-harness.codeflow.cc
-          files: |
-            output/pdf/agent-harness-engineering.pdf
-            output/epub/agent-harness-engineering.epub
-          prerelease: false
-          make_latest: true
+      # 成品提交回仓库的 site/public/downloads/，随网站一起部署到 /downloads/。
+      # 用 GITHUB_TOKEN 推送不会再触发 GitHub Actions（本工作流不会自己触发自己），
+      # 但会触发 Cloudflare Workers Builds 重新构建网站，首页的下载按钮随之更新。
+      - name: Commit PDF and EPUB into site/public/downloads
+        run: |
+          mkdir -p site/public/downloads
+          cp output/pdf/agent-harness-engineering.pdf output/epub/agent-harness-engineering.epub site/public/downloads/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/public/downloads
+          if git diff --cached --quiet; then
+            echo "电子书没有变化，不提交"
+            exit 0
+          fi
+          git commit -m "电子书：从 ${GITHUB_SHA::7} 重新构建 PDF/EPUB"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"

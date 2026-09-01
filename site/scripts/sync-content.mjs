@@ -28,8 +28,8 @@ const docsDir = join(siteDir, "src", "content", "docs");
 const bookDocsDir = join(docsDir, "book");
 const publicDir = join(siteDir, "public");
 
-const releaseBase = "https://github.com/outyua/book-agent-harness/releases/latest/download";
-
+// PDF/EPUB 随仓库提交在 public/downloads/（由 .github/workflows/ebook.yml 构建后提交），线上地址 /downloads/<文件名>。
+// 仓库是私有的，不能把下载链接指到 GitHub Release。
 const downloads = {
   pdf: "agent-harness-engineering.pdf",
   epub: "agent-harness-engineering.epub",
@@ -140,7 +140,7 @@ const SITE = "https://agent-harness.codeflow.cc";
 // 给 AI 爬虫与 LLM 的纯文本版本：每页一份 markdown（/book/<id>.md）、llms.txt 索引、llms-full.txt 全文。
 // 每份文本开头都带作者与出处，抓取方即使只取一页也能看到署名。
 function attribution(section) {
-  const pageUrl = `${SITE}/book/${section.id}/`;
+  const pageUrl = `${SITE}/book/${section.id}`;
   return [
     `> 本页出自《${publication.fullTitle}》，作者 ${publication.author}（公众号 ${publication.account}，${publication.email}）。`,
     `> 修订版 ${publication.revision} · ${publication.revisionDate}。网页版：${pageUrl} ；全书：${SITE}/ 。`,
@@ -186,7 +186,7 @@ function writeSectionPages() {
     if (/^chapter-\d+$/.test(section.id)) text = removeChapterReview(text).markdown;
     if (section.id === "back-matter") text = prepareBackMatter(text);
     text = text.replace(/\]\((?:\.\.\/)?figures\//g, `](${SITE}/figures/`);
-    const textPage = `${attribution(section)}\n${text.trim()}\n\n---\n\n作者 ${publication.author} · 《${publication.fullTitle}》 · ${SITE}/book/${section.id}/\n`;
+    const textPage = `${attribution(section)}\n${text.trim()}\n\n---\n\n作者 ${publication.author} · 《${publication.fullTitle}》 · ${SITE}/book/${section.id}\n`;
     writeFileSync(join(textDir, `${section.id}.md`), textPage, "utf8");
     llmsIndex.push(`- [${section.label}](${SITE}/book/${section.id}.md)：${page.description}`);
     llmsFull.push(`\n\n---\n\n${attribution(section)}\n${text.trim()}`);
@@ -248,8 +248,7 @@ function copyStaticAssets() {
     } else if (existsSync(join(downloadsOut, name))) {
       available[kind] = `/downloads/${name}`;
     } else {
-      // 没有本地构建产物（例如 Cloudflare 构建环境）时，指向 GitHub Action 发布的最新 Release 附件
-      available[kind] = `${releaseBase}/${name}`;
+      console.warn(`public/downloads/${name} 不存在，首页不显示 ${kind.toUpperCase()} 下载按钮`);
     }
   }
   return available;
@@ -264,16 +263,16 @@ function writeIndexPage(available) {
   for (const section of sections) {
     if (section.type === "part") {
       currentPart = section;
-      partRows.push(`\n### [${section.label}](/book/${section.id}/)\n`);
+      partRows.push(`\n### [${section.label}](/book/${section.id})\n`);
       continue;
     }
     if (section.type === "chapter" && currentPart) {
-      partRows.push(`- [${section.label}](/book/${section.id}/)`);
+      partRows.push(`- [${section.label}](/book/${section.id})`);
     }
   }
 
   const actions = [
-    { text: "开始阅读", link: "/book/preface/", icon: "right-arrow", variant: "primary" },
+    { text: "开始阅读", link: "/book/preface", icon: "right-arrow", variant: "primary" },
   ];
   if (available.pdf) actions.push({ text: "下载 PDF", link: available.pdf, icon: "document", variant: "secondary" });
   if (available.epub) actions.push({ text: "下载 EPUB", link: available.epub, icon: "open-book", variant: "secondary" });
@@ -325,10 +324,10 @@ ${actionsYaml}
 
 ## 目录
 
-- [${sections[0].label}](/book/${sections[0].id}/)
+- [${sections[0].label}](/book/${sections[0].id})
 ${partRows.join("\n")}
 
-- [${sections.at(-1).label}](/book/${sections.at(-1).id}/)
+- [${sections.at(-1).label}](/book/${sections.at(-1).id})
 
 </nav>
 `;

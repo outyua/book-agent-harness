@@ -39,7 +39,7 @@ function buildLastmod() {
 	let newest = fallback;
 	for (const section of sections) {
 		const date = gitDate(`manuscript/${section.source}`) ?? fallback;
-		map.set(`/book/${section.id}/`, date);
+		map.set(`/book/${section.id}`, date);
 		if (date > newest) newest = date;
 	}
 	map.set('/', newest);
@@ -141,7 +141,9 @@ function buildSidebar() {
 
 export default defineConfig({
 	site: SITE,
-	trailingSlash: 'always',
+	// 页面地址不带尾斜杠（/book/chapter-1）。Starlight 的 canonical、侧栏、分页链接都按这个值生成；
+	// 线上由 wrangler.jsonc 的 html_handling: drop-trailing-slash 把 /book/chapter-1/ 跳到无斜杠地址。
+	trailingSlash: 'never',
 	integrations: [
 		starlight({
 			title: publication.title,

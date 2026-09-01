@@ -8,7 +8,7 @@ const { entry } = Astro.locals.starlightRoute;
 const isSplash = entry.data.template === 'splash';
 const pageTitle = entry.data.title;
 const pageUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://agent-harness.codeflow.cc').href;
-const markdownUrl = pageUrl.replace(/\/$/, '.md');
+const markdownUrl = `${pageUrl.replace(/\/$/, '')}.md`;
 const subject = encodeURIComponent(`《${publication.title}》反馈：${pageTitle}`);
 const body = encodeURIComponent(`页面：${pageUrl}\n\n（请写下你发现的问题、疑问或建议；勘误请附上原文片段。）\n`);
 const mailto = `mailto:${publication.email}?subject=${subject}&body=${body}`;

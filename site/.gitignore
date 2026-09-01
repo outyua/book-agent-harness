@@ -3,7 +3,6 @@ dist/
 .astro/
 public/figures/
 public/fonts/
-public/downloads/
 public/cover.png
 src/assets/cover.png
 src/content/docs/book/

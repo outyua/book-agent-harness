@@ -66,5 +66,6 @@ jobs:
             exit 0
           fi
           git commit -m "电子书：从 ${GITHUB_SHA::7} 重新构建 PDF/EPUB"
-          git pull --rebase origin "$GITHUB_REF_NAME"
+          # 构建会顺带改写 assets/cover.png 等未提交的文件，--autostash 先把它们挪开，只推电子书
+          git pull --rebase --autostash origin "$GITHUB_REF_NAME"
           git push origin "HEAD:$GITHUB_REF_NAME"
